@@ -1,4 +1,4 @@
-package main
+package gochess
 
 import (
 	"github.com/stretchr/testify/assert"
@@ -55,11 +55,3 @@ func TestParseBoardInputWithPlayedPieces(t *testing.T) {
 // 2 dim array Board
 // color switching
 //
-
-// func TestBestMove_noTake(t *testing.T) {
-//     // when
-// 	result := getBestMove(board, color, parseMoves(moves))
-
-// 	// then
-// 	assert.Equal(t, result.format(), )
-// }
