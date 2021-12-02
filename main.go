@@ -1,8 +1,9 @@
-package gochess
+package main
 
 import (
 	"fmt"
 	"os"
+	"math/rand"
 )
 
 func main() {
@@ -38,41 +39,46 @@ func main() {
 			availableMoves[i] = move
 		}
 		fmt.Fprintln(os.Stderr, "moves: ", availableMoves)
-
-		play(boardInput, color, availableMoves, &moveHistory)
+		
+		isWhite := color == "w"
+		play(boardInput, isWhite, availableMoves, &moveHistory)
 	}
 }
 
-func play(boardInput string, color string, moves []string, moveHistory *[]Move) {
+func play(boardInput string, isWhite bool, moves []string, moveHistory *[]Move) {
 	legalMoves := parseMoves(moves)
-	move := getBestMove(parseBoardInput(boardInput), color, legalMoves)
+	move := getBestMove(parseBoardInput(boardInput), isWhite, legalMoves)
 	fmt.Println(move.format()) // Write action to stdout
 	*moveHistory = append(*moveHistory, move)
 }
 
-func getBestMove(board Board, color string, legalMoves []Move) Move {
-	aggressiveMoves := getAllAggressiveMoves(board, color)
+func getBestMove(board Board, isWhite bool, legalMoves []Move) Move {
+	aggressiveMoves := getAllAggressiveMoves(board, isWhite)
 	if len(aggressiveMoves) > 0 {
 		return aggressiveMoves[0]
 	}
-	return legalMoves[len(legalMoves)-1]
+	if len(legalMoves) > 1 {
+		return legalMoves[rand.Intn(len(legalMoves)-1)]
+	} else {
+		return legalMoves[0]
+	}
 }
 
-func getAllAggressiveMoves(board Board, color string) []Move {
+func getAllAggressiveMoves(board Board, isWhite bool) []Move {
 	vmod := 1
-	if color != "w" {
+	if !isWhite {
 		vmod = -1
 	}
 	aggressiveMoves := make([]Move, 0)
 	for i := 0; i < len(board.pieces); i++ {
 		p := board.pieces[i]
-		if p.value == 'P' {
-			frontRight := addPieceMovesIfValid(board, p.position.x, p.position.y, p.position.x + 1, p.position.y + vmod)
-			if(frontRight != Move{}){
+		if p.value == 'P' || p.value == 'p' {
+			frontRight := addPieceMovesIfValid(board, isWhite, p.position.x, p.position.y, p.position.x+1, p.position.y+vmod)
+			if (frontRight != Move{}) {
 				aggressiveMoves = append(aggressiveMoves, frontRight)
 			}
-			frontLeft := addPieceMovesIfValid(board, p.position.x, p.position.y, p.position.x - 1, p.position.y + vmod)
-			if(frontLeft != Move{}){
+			frontLeft := addPieceMovesIfValid(board, isWhite, p.position.x, p.position.y, p.position.x-1, p.position.y+vmod)
+			if (frontLeft != Move{}) {
 				aggressiveMoves = append(aggressiveMoves, frontLeft)
 			}
 		}
@@ -80,16 +86,18 @@ func getAllAggressiveMoves(board Board, color string) []Move {
 	return aggressiveMoves
 }
 
-func addPieceMovesIfValid(board Board, originX int, originY, x int, y int) Move {
+func addPieceMovesIfValid(board Board, isWhite bool, originX int, originY, x int, y int) Move {
 	if x >= 0 && x < 7 && y >= 0 && y < 7 {
 		target := board.grid[x][y]
-		if target != 0 {
-			return Move{begin: Position{x:originX, y: originY}, end: Position{x:x, y: y}}
+		if target != 0 && determineIfWhite(target) != isWhite {
+			return Move{begin: Position{x: originX, y: originY}, end: Position{x: x, y: y}}
 		}
 	}
 	return Move{}
 }
-
+func determineIfWhite(piece byte) bool {
+	return piece >= 'A' && piece <= 'Z'
+}
 
 func parseMoves(strMoves []string) []Move {
 	var parsedMoves []Move
@@ -126,7 +134,7 @@ func parseBoardInput(boardInput string) Board {
 			y--
 			x = 0
 		} else if input >= 49 && input <= 56 {
-			x = int(input)-48+x
+			x = int(input) - 48 + x
 		} else {
 			board[x][y] = byte(input)
 			pieces[pieceIndex] = Piece{value: byte(input), position: Position{x: x, y: y}}

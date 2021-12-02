@@ -1,12 +1,13 @@
-package gochess
+package main
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 var boardInput = "nqbrkbnr/pppppppp/8/8/8/8/PPPPPPPP/NQBRKBNR"
-var color = "w"
+var isWhite = true
 var moves = []string{"a2a3", "a2a4", "b2b3", "b2b4", "c2c3", "c2c4", "d1c3", "d1e3", "d2d3", "d2d4", "e1d3", "e1f3", "e2e3", "e2e4", "f2f3", "f2f4", "g2g3", "g2g4", "h2h3", "h2h4"}
 var moveHistory = make([]Move, 0)
 
@@ -16,7 +17,7 @@ func TestNominalCase(t *testing.T) {
 	// given
 
 	// when
-	play(boardInput, color, moves, &moveHistory)
+	play(boardInput, isWhite, moves, &moveHistory)
 
 	// then
 	assert.Len(t, moveHistory, 1)
