@@ -17,21 +17,21 @@ func TestNominalCase(t *testing.T) {
 	// given
 
 	// when
-	play(boardInput, isWhite, moves, &moveHistory)
+	Play(boardInput, isWhite, moves, &moveHistory)
 
 	// then
 	assert.Len(t, moveHistory, 1)
 }
 func TestParseMoves(t *testing.T) {
 	// when
-	result := parseMoves(moves)
+	result := ParseMoves(moves)
 
 	// then
-	assert.Equal(t, "a2a3", result[0].format())
+	assert.Equal(t, "a2a3", result[0].Format())
 }
 func TestParseBoardInput(t *testing.T) {
 	// when
-	result := parseBoardInput(boardInput).grid
+	result := ParseBoardInput(boardInput).Grid
 
 	// then
 	assert.Equal(t, "n", string(result[0][7]))
@@ -42,7 +42,7 @@ func TestParseBoardInputWithPlayedPieces(t *testing.T) {
 	// given
 	b := "rnknqrbb/ppppppp1/8/8/6pP/8/PPPPPP2/RNKNQRBB"
 	// when
-	result := parseBoardInput(b).grid
+	result := ParseBoardInput(b).Grid
 	// then
 	assert.Equal(t, "r", string(result[0][7]))
 	assert.Equal(t, "B", string(result[7][0]))

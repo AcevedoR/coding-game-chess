@@ -2,10 +2,9 @@ package main
 
 import (
 	"fmt"
-	"os"
 	"math/rand"
+	"os"
 )
-
 func main() {
 	fmt.Fprintln(os.Stderr, "starting game")
 	var moveHistory = make([]Move, 100)
@@ -39,21 +38,21 @@ func main() {
 			availableMoves[i] = move
 		}
 		fmt.Fprintln(os.Stderr, "moves: ", availableMoves)
-		
+
 		isWhite := color == "w"
-		play(boardInput, isWhite, availableMoves, &moveHistory)
+		Play(boardInput, isWhite, availableMoves, &moveHistory)
 	}
 }
 
-func play(boardInput string, isWhite bool, moves []string, moveHistory *[]Move) {
-	legalMoves := parseMoves(moves)
-	move := getBestMove(parseBoardInput(boardInput), isWhite, legalMoves)
-	fmt.Println(move.format()) // Write action to stdout
+func Play(boardInput string, isWhite bool, moves []string, moveHistory *[]Move) {
+	legalMoves := ParseMoves(moves)
+	move := GetBestMove(ParseBoardInput(boardInput), isWhite, legalMoves)
+	fmt.Println(move.Format()) // Write action to stdout
 	*moveHistory = append(*moveHistory, move)
 }
 
-func getBestMove(board Board, isWhite bool, legalMoves []Move) Move {
-	aggressiveMoves := getAllAggressiveMoves(board, isWhite)
+func GetBestMove(board Board, isWhite bool, legalMoves []Move) Move {
+	aggressiveMoves := GetAllAggressiveMoves(board, isWhite)
 	if len(aggressiveMoves) > 0 {
 		return aggressiveMoves[0]
 	}
@@ -64,20 +63,23 @@ func getBestMove(board Board, isWhite bool, legalMoves []Move) Move {
 	}
 }
 
-func getAllAggressiveMoves(board Board, isWhite bool) []Move {
+func GetAllAggressiveMoves(board Board, isWhite bool) []Move {
 	vmod := 1
+	var colorPieces *[30]Piece = &board.WhitePieces
 	if !isWhite {
+		colorPieces = &board.BlackPieces
 		vmod = -1
 	}
+	
 	aggressiveMoves := make([]Move, 0)
-	for i := 0; i < len(board.pieces); i++ {
-		p := board.pieces[i]
-		if p.value == 'P' || p.value == 'p' {
-			frontRight := addPieceMovesIfValid(board, isWhite, p.position.x, p.position.y, p.position.x+1, p.position.y+vmod)
+	for i := 0; i < len(colorPieces); i++ {
+		p := colorPieces[i]
+		if p.Value == 'P' || p.Value == 'p' {
+			frontRight := AddPieceMovesIfValid(board, isWhite, p.Position.x, p.Position.y, p.Position.x+1, p.Position.y+vmod)
 			if (frontRight != Move{}) {
 				aggressiveMoves = append(aggressiveMoves, frontRight)
 			}
-			frontLeft := addPieceMovesIfValid(board, isWhite, p.position.x, p.position.y, p.position.x-1, p.position.y+vmod)
+			frontLeft := AddPieceMovesIfValid(board, isWhite, p.Position.x, p.Position.y, p.Position.x-1, p.Position.y+vmod)
 			if (frontLeft != Move{}) {
 				aggressiveMoves = append(aggressiveMoves, frontLeft)
 			}
@@ -86,11 +88,11 @@ func getAllAggressiveMoves(board Board, isWhite bool) []Move {
 	return aggressiveMoves
 }
 
-func addPieceMovesIfValid(board Board, isWhite bool, originX int, originY, x int, y int) Move {
+func AddPieceMovesIfValid(board Board, isWhite bool, originX int, originY, x int, y int) Move {
 	if x >= 0 && x < 7 && y >= 0 && y < 7 {
-		target := board.grid[x][y]
+		target := board.Grid[x][y]
 		if target != 0 && determineIfWhite(target) != isWhite {
-			return Move{begin: Position{x: originX, y: originY}, end: Position{x: x, y: y}}
+			return Move{Begin: Position{x: originX, y: originY}, End: Position{x: x, y: y}}
 		}
 	}
 	return Move{}
@@ -99,18 +101,18 @@ func determineIfWhite(piece byte) bool {
 	return piece >= 'A' && piece <= 'Z'
 }
 
-func parseMoves(strMoves []string) []Move {
+func ParseMoves(strMoves []string) []Move {
 	var parsedMoves []Move
 	for i := 0; i < len(strMoves); i++ {
 		m := strMoves[i]
 		parsedMoves = append(
 			parsedMoves,
 			Move{
-				begin: *PositionOf(
+				Begin: *PositionOf(
 					m[0],
 					m[1],
 				),
-				end: *PositionOf(
+				End: *PositionOf(
 					m[2],
 					m[3],
 				),
@@ -120,10 +122,11 @@ func parseMoves(strMoves []string) []Move {
 	return parsedMoves
 }
 
-func parseBoardInput(boardInput string) Board {
+func ParseBoardInput(boardInput string) Board {
 	var board [8][8]byte
-	var pieces [32]Piece
-	var pieceIndex int
+	var whitePieces [30]Piece
+	var blackPieces [30]Piece
+	var whitePiecesIndex, blackPiecesIndex int
 	var y = 7
 	var x = 0
 	for i := 0; i < len(boardInput); i++ {
@@ -137,8 +140,13 @@ func parseBoardInput(boardInput string) Board {
 			x = int(input) - 48 + x
 		} else {
 			board[x][y] = byte(input)
-			pieces[pieceIndex] = Piece{value: byte(input), position: Position{x: x, y: y}}
-			pieceIndex++
+			if determineIfWhite(byte(input)) {
+				whitePieces[whitePiecesIndex] = Piece{Value: byte(input), Position: Position{x: x, y: y}}
+				whitePiecesIndex++
+			} else {
+				blackPieces[blackPiecesIndex] = Piece{Value: byte(input), Position: Position{x: x, y: y}}
+				blackPiecesIndex++
+			}
 			x++
 		}
 	}
@@ -154,21 +162,22 @@ func parseBoardInput(boardInput string) Board {
 	// }
 	// fmt.Fprintln(os.Stderr, "---------")
 
-	return Board{grid: board, pieces: pieces}
+	return Board{Grid: board, WhitePieces: whitePieces, BlackPieces: blackPieces}
 }
 
 type Board struct {
-	grid   [8][8]byte
-	pieces [32]Piece
+	Grid        [8][8]byte
+	WhitePieces [30]Piece
+	BlackPieces [30]Piece
 }
 
 func (b Board) get(column byte, line int) byte {
-	return b.grid[column-97][line-1]
+	return b.Grid[column-97][line-1]
 }
 
 type Piece struct {
-	value    byte
-	position Position
+	Value    byte
+	Position Position
 }
 
 type Position struct {
@@ -180,15 +189,15 @@ func PositionOf(column byte, line byte) *Position {
 	return &Position{x: int(column) - 97, y: int(line) - 48 - 1}
 }
 
-func (p Position) format() string {
+func (p Position) Format() string {
 	return fmt.Sprintf("%s%d", string(byte(p.x+97)), p.y+1)
 }
 
 type Move struct {
-	begin Position
-	end   Position
+	Begin Position
+	End   Position
 }
 
-func (m Move) format() string {
-	return m.begin.format() + m.end.format()
+func (m Move) Format() string {
+	return m.Begin.Format() + m.End.Format()
 }
