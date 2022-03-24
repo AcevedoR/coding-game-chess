@@ -84,10 +84,10 @@ func GetAllAggressiveMoves(board Board, isWhite bool) []Move {
 	}
 	return moves
 }
-func getLineTakeIfAny(board Board, isWhite bool, origin Position, horizontalDirection int, verticalDirection int, close bool) Move {
+func getLineTakeIfAny(board Board, isWhite bool, origin Position, horizontalDirection int, verticalDirection int, adjacent bool) Move {
 	xGoal := 7
 	yGoal := 7
-	if close {
+	if adjacent {
 		xGoal = max(0, min(7, origin.x + horizontalDirection))
 		yGoal = max(0, min(7, origin.y + verticalDirection))
 	}

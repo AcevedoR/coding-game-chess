@@ -17,11 +17,10 @@ func TestPawnTake(t *testing.T) {
 	assert.Contains(
 		t,
 		result,
-		Move{Begin: *PositionOf('d', '4'), End: *PositionOf('c', '5')},
-		Move{Begin: *PositionOf('d', '4'), End: *PositionOf('e', '5')},
+		moveOf('d', '4', 'c', '5'),
+		moveOf('d', '4', 'e', '5'),
 	)
 }
-
 func TestPawnTakeWithBlacks(t *testing.T) {
 	// given
 	board := ParseBoardInput("8/8/1PPPPP2/1PPPPP2/1PPpPP2/1PPPPP2/1PPPPP2/8")
@@ -33,12 +32,12 @@ func TestPawnTakeWithBlacks(t *testing.T) {
 	assert.Contains(
 		t,
 		result,
-		Move{Begin: *PositionOf('d', '4'), End: *PositionOf('c', '3')},
+		moveOf('d', '4', 'c', '3'),
 	)
 	assert.Contains(
 		t,
 		result,
-		Move{Begin: *PositionOf('d', '4'), End: *PositionOf('e', '3')},
+		moveOf('d', '4', 'e', '3'),
 	)
 }
 
@@ -49,8 +48,8 @@ func TestPawnShouldNotTakeFriendly(t *testing.T) {
 	// when
 	result := GetAllAggressiveMoves(board, true)
 
-	// then
 	isResultEmpty := true
+	// then
 	for _, v := range result {
 		if (v != Move{}) {
 			isResultEmpty = false
@@ -74,7 +73,7 @@ func TestDoNotTryToPlayEnemy(t *testing.T) {
 	assert.NotContains(
 		t,
 		result,
-		Move{Begin: *PositionOf('c', '6'), End: *PositionOf('d', '7')},
+		moveOf('c', '6', 'd', '7'),
 	)
 }
 func xTestRockTakeClose(t *testing.T) {
@@ -88,22 +87,22 @@ func xTestRockTakeClose(t *testing.T) {
 	assert.Contains(
 		t,
 		result,
-		Move{Begin: *PositionOf('d', '4'), End: *PositionOf('d', '5')},
+		moveOf('d', '4', 'd', '5'),
 	)
 	assert.Contains(
 		t,
 		result,
-		Move{Begin: *PositionOf('d', '4'), End: *PositionOf('d', '3')},
+		moveOf('d', '4', 'd', '3'),
 	)
 	assert.Contains(
 		t,
 		result,
-		Move{Begin: *PositionOf('d', '4'), End: *PositionOf('e', '4')},
+		moveOf('d', '4', 'e', '4'),
 	)
 	assert.Contains(
 		t,
 		result,
-		Move{Begin: *PositionOf('d', '4'), End: *PositionOf('c', '4')},
+		moveOf('d', '4', 'c', '4'),
 	)
 
 }
@@ -119,21 +118,25 @@ func xTestRockTakeFar(t *testing.T) {
 	assert.Contains(
 		t,
 		result,
-		Move{Begin: *PositionOf('d', '4'), End: *PositionOf('d', '8')},
+		moveOf('d', '4', 'd', '8'),
 	)
 	assert.Contains(
 		t,
 		result,
-		Move{Begin: *PositionOf('d', '4'), End: *PositionOf('h', '4')},
+		moveOf('d', '4', 'h', '4'),
 	)
 	assert.Contains(
 		t,
 		result,
-		Move{Begin: *PositionOf('d', '4'), End: *PositionOf('d', '2')},
+		moveOf('d', '4', 'd', '2'),
 	)
 	assert.Contains(
 		t,
 		result,
-		Move{Begin: *PositionOf('d', '4'), End: *PositionOf('b', '4')},
+		moveOf('d', '4', 'b', '4'),
 	)
+}
+
+func moveOf(beginX byte, beginY byte, endX byte, endY byte) Move{
+	return Move{Begin: *PositionOf(beginX, beginY), End: *PositionOf(endX, endY)}
 }
