@@ -71,26 +71,20 @@ func GetAllAggressiveMoves(board Board, isWhite bool) []Move {
 		vmod = -1
 	}
 
-	aggressiveMoves := make([]Move, 0)
+	moves := make([]Move, 0)
 	for i := 0; i < len(colorPieces); i++ {
 		p := colorPieces[i]
 		if p.Value == 'P' || p.Value == 'p' {
-			frontRight := checkLineTakes(board, isWhite, p.Position, 1, vmod, true)
-			if (frontRight != Move{}) {
-				aggressiveMoves = append(aggressiveMoves, frontRight)
-			}
-			frontLeft := checkLineTakes(board, isWhite, p.Position, -1, vmod, true)
-			if (frontLeft != Move{}) {
-				aggressiveMoves = append(aggressiveMoves, frontLeft)
-			}
+			appendMoveIfPresent(&moves, getLineTakeIfAny(board, isWhite, p.Position, 1, vmod, true))
+			appendMoveIfPresent(&moves, getLineTakeIfAny(board, isWhite, p.Position, -1, vmod, true))
 		} else if p.Value == 'P' || p.Value == 'p' {
 			// up := AddPieceMovesIfValid(board, isWhite, p.Position.x, p.Position.y, p.Position.x, p.Position.y + 1)
 
 		}
 	}
-	return aggressiveMoves
+	return moves
 }
-func checkLineTakes(board Board, isWhite bool, origin Position, horizontalDirection int, verticalDirection int, close bool) Move {
+func getLineTakeIfAny(board Board, isWhite bool, origin Position, horizontalDirection int, verticalDirection int, close bool) Move {
 	xGoal := 7
 	yGoal := 7
 	if close {
@@ -106,6 +100,11 @@ func checkLineTakes(board Board, isWhite bool, origin Position, horizontalDirect
 		}
 	}
 	return Move{}
+}
+func appendMoveIfPresent(moves *[]Move, move Move){
+	if (move != Move{}) {
+		*moves = append(*moves, move)
+	}
 }
 func min(a, b int) int {
 	if a < b {
@@ -228,6 +227,7 @@ func (p Position) Format() string {
 type Move struct {
 	Begin Position
 	End   Position
+
 }
 
 func (m Move) Format() string {
