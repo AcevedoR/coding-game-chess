@@ -70,12 +70,13 @@ func GetAllAggressiveMoves(board Board, isWhite bool) []Move {
 		colorPieces = &board.BlackPieces
 		vmod = -1
 	}
-	
+
 	aggressiveMoves := make([]Move, 0)
 	for i := 0; i < len(colorPieces); i++ {
 		p := colorPieces[i]
 		if p.Value == 'P' || p.Value == 'p' {
-			frontRight := AddPieceMovesIfValid(board, isWhite, p.Position.x, p.Position.y, p.Position.x+1, p.Position.y+vmod)
+			//frontRight := AddPieceMovesIfValid(board, isWhite, p.Position.x, p.Position.y, p.Position.x+1, p.Position.y+vmod)
+			frontRight := checkLineTakes(board, isWhite, p.Position, 1, vmod, true)
 			if (frontRight != Move{}) {
 				aggressiveMoves = append(aggressiveMoves, frontRight)
 			}
@@ -83,9 +84,41 @@ func GetAllAggressiveMoves(board Board, isWhite bool) []Move {
 			if (frontLeft != Move{}) {
 				aggressiveMoves = append(aggressiveMoves, frontLeft)
 			}
+		} else if p.Value == 'P' || p.Value == 'p' {
+			// up := AddPieceMovesIfValid(board, isWhite, p.Position.x, p.Position.y, p.Position.x, p.Position.y + 1)
+
 		}
 	}
 	return aggressiveMoves
+}
+func checkLineTakes(board Board, isWhite bool, origin Position, horizontalDirection int, verticalDirection int, close bool) Move {
+	xGoal := 7
+	yGoal := 7
+	if close {
+		xGoal = max(0, min(7, origin.x + horizontalDirection))
+		yGoal = max(0, min(7, origin.y + verticalDirection))
+	}
+	for x := origin.x + horizontalDirection; x <= xGoal; x++ {
+		for y := origin.y + verticalDirection; y <= yGoal; y++ {
+			target := board.Grid[x][y]
+			if target != 0 && determineIfWhite(target) != isWhite {
+				return Move{Begin: Position{x: origin.x, y: origin.y}, End: Position{x: x, y: y}}
+			}
+		}
+	}
+	return Move{}
+}
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
+func max(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
 }
 
 func AddPieceMovesIfValid(board Board, isWhite bool, originX int, originY, x int, y int) Move {

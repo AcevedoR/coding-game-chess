@@ -34,6 +34,10 @@ func TestPawnTakeWithBlacks(t *testing.T) {
 		t,
 		result,
 		Move{Begin: *PositionOf('d', '4'), End: *PositionOf('c', '3')},
+	)
+	assert.Contains(
+		t,
+		result,
 		Move{Begin: *PositionOf('d', '4'), End: *PositionOf('e', '3')},
 	)
 }
@@ -48,7 +52,7 @@ func TestPawnShouldNotTakeFriendly(t *testing.T) {
 	// then
 	isResultEmpty := true
 	for _, v := range result {
-		if (v != Move{}){
+		if (v != Move{}) {
 			isResultEmpty = false
 		}
 	}
@@ -73,7 +77,7 @@ func TestDoNotTryToPlayEnemy(t *testing.T) {
 		Move{Begin: *PositionOf('c', '6'), End: *PositionOf('d', '7')},
 	)
 }
-func xTestRockTake(t *testing.T) {
+func xTestRockTakeClose(t *testing.T) {
 	// given
 	board := ParseBoardInput("8/8/1ppppp2/1ppppp2/1ppRpp2/1ppppp2/1ppppp2/8")
 
@@ -85,8 +89,51 @@ func xTestRockTake(t *testing.T) {
 		t,
 		result,
 		Move{Begin: *PositionOf('d', '4'), End: *PositionOf('d', '5')},
+	)
+	assert.Contains(
+		t,
+		result,
 		Move{Begin: *PositionOf('d', '4'), End: *PositionOf('d', '3')},
+	)
+	assert.Contains(
+		t,
+		result,
 		Move{Begin: *PositionOf('d', '4'), End: *PositionOf('e', '4')},
+	)
+	assert.Contains(
+		t,
+		result,
 		Move{Begin: *PositionOf('d', '4'), End: *PositionOf('c', '4')},
+	)
+
+}
+
+func xTestRockTakeFar(t *testing.T) {
+	// given
+	board := ParseBoardInput("8/8/1ppppp2/1ppppp2/1ppRpp2/1ppppp2/1ppppp2/8")
+
+	// when
+	result := GetAllAggressiveMoves(board, true)
+
+	// then
+	assert.Contains(
+		t,
+		result,
+		Move{Begin: *PositionOf('d', '4'), End: *PositionOf('d', '8')},
+	)
+	assert.Contains(
+		t,
+		result,
+		Move{Begin: *PositionOf('d', '4'), End: *PositionOf('h', '4')},
+	)
+	assert.Contains(
+		t,
+		result,
+		Move{Begin: *PositionOf('d', '4'), End: *PositionOf('d', '2')},
+	)
+	assert.Contains(
+		t,
+		result,
+		Move{Begin: *PositionOf('d', '4'), End: *PositionOf('b', '4')},
 	)
 }
