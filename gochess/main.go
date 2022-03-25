@@ -2,9 +2,11 @@ package main
 
 import (
 	"fmt"
+	"github.com/olekukonko/tablewriter"
 	"math/rand"
 	"os"
 )
+
 func main() {
 	fmt.Fprintln(os.Stderr, "starting game")
 	var moveHistory = make([]Move, 100)
@@ -75,8 +77,9 @@ func GetAllAggressiveMoves(board Board, isWhite bool) []Move {
 	for i := 0; i < len(colorPieces); i++ {
 		p := colorPieces[i]
 		if p.Value == 'P' || p.Value == 'p' {
-			appendMoveIfPresent(&moves, getLineTakeIfAny(board, isWhite, p.Position, 1, vmod, true))
-			appendMoveIfPresent(&moves, getLineTakeIfAny(board, isWhite, p.Position, -1, vmod, true))
+			appendMoveIfPresent(&moves, getAvailableLineTake(board, isWhite, p.Position, 1, vmod, true))
+			appendMoveIfPresent(&moves, getAvailableLineTake(board, isWhite, p.Position, -1, vmod, true))
+			appendMoveIfPresent(&moves, getAvailableMoves(board, isWhite, p.Position, 0, vmod, 1))
 		} else if p.Value == 'P' || p.Value == 'p' {
 			// up := AddPieceMovesIfValid(board, isWhite, p.Position.x, p.Position.y, p.Position.x, p.Position.y + 1)
 
@@ -84,24 +87,59 @@ func GetAllAggressiveMoves(board Board, isWhite bool) []Move {
 	}
 	return moves
 }
-func getLineTakeIfAny(board Board, isWhite bool, origin Position, horizontalDirection int, verticalDirection int, adjacent bool) Move {
+func getAvailableLineTake(board Board, isWhite bool, origin Position, horizontalDirection int, verticalDirection int, adjacent bool) Move {
 	xGoal := 7
 	yGoal := 7
 	if adjacent {
-		xGoal = max(0, min(7, origin.x + horizontalDirection))
-		yGoal = max(0, min(7, origin.y + verticalDirection))
+		xGoal = max(0, min(7, origin.x+horizontalDirection))
+		yGoal = max(0, min(7, origin.y+verticalDirection))
 	}
-	for x := max(0, min(7, origin.x + horizontalDirection)); x <= xGoal; x++ {
-		for y := max(0, min(7, origin.y + verticalDirection)); y <= yGoal; y++ {
+	for x := max(0, min(7, origin.x+horizontalDirection)); x <= xGoal; x++ {
+		for y := max(0, min(7, origin.y+verticalDirection)); y <= yGoal; y++ {
 			target := board.Grid[x][y]
+
 			if target != 0 && determineIfWhite(target) != isWhite {
 				return Move{Begin: Position{x: origin.x, y: origin.y}, End: Position{x: x, y: y}}
 			}
 		}
 	}
+
 	return Move{}
 }
-func appendMoveIfPresent(moves *[]Move, move Move){
+func getAvailableMoves(board Board, isWhite bool, origin Position, horizontalDirection int, verticalDirection int, rrange int) Move {
+	// TODO test with big range
+	var auditBoard [8][8]byte
+	var moves []Move
+	horizontalSign := horizontalDirection
+	verticalSign := verticalDirection
+	xGoal := origin.x + (horizontalSign * rrange)
+	yGoal := origin.y + (verticalSign * rrange)
+	if horizontalDirection == 0 {
+		xGoal = origin.x
+		horizontalSign = 1
+	}
+	if verticalDirection == 0 {
+		yGoal = origin.y
+		verticalSign = 1
+	}
+
+	for x := max(0, min(7, (origin.x)+horizontalDirection)); x >= 0 && x <= xGoal; x += horizontalSign {
+		for y := max(0, min(7, (origin.y)+verticalDirection)); y >= 0 && y <= yGoal; y += verticalSign {
+			target := board.Grid[x][y]
+			auditBoard[x][y] = 'o'
+			if target == 0 {
+				auditBoard[x][y] = 'x'
+				moves = append(moves, Move{Begin: Position{x: origin.x, y: origin.y}, End: Position{x: x, y: y}})
+			}
+		}
+	}
+	printBoard(auditBoard)
+	if len(moves) > 0 {
+		return moves[0]
+	}
+	return Move{}
+}
+func appendMoveIfPresent(moves *[]Move, move Move) {
 	if (move != Move{}) {
 		*moves = append(*moves, move)
 	}
@@ -181,7 +219,6 @@ func ParseBoardInput(boardInput string) Board {
 			x++
 		}
 	}
-
 	// fmt.Fprintln(os.Stderr, "---------")
 
 	// for y := 7; y >= 0; y-- {
@@ -192,7 +229,7 @@ func ParseBoardInput(boardInput string) Board {
 	// 	fmt.Fprintln(os.Stderr, str)
 	// }
 	// fmt.Fprintln(os.Stderr, "---------")
-
+	printBoard(board)
 	return Board{Grid: board, WhitePieces: whitePieces, BlackPieces: blackPieces}
 }
 
@@ -227,9 +264,34 @@ func (p Position) Format() string {
 type Move struct {
 	Begin Position
 	End   Position
-
 }
 
 func (m Move) Format() string {
 	return m.Begin.Format() + m.End.Format()
+}
+func printBoard(b [8][8]byte) {
+	if isDebug() {
+		data := [][]string{}
+		println("FSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS")
+
+		for y := 7; y >= 0; y-- {
+			var line []string
+			line = append(line, fmt.Sprint(int(y+1)))
+			for x := 0; x <= 7; x++ {
+				line = append(line, string(b[x][y]))
+			}
+			data = append(data, line)
+		}
+
+		table := tablewriter.NewWriter(os.Stdout)
+		table.SetFooter([]string{" ", "a", "b", "c", "d", "e", "f", "g", "h"})
+
+		for _, v := range data {
+			table.Append(v)
+		}
+		table.Render() // Send output
+	}
+}
+func isDebug() bool {
+	return true
 }

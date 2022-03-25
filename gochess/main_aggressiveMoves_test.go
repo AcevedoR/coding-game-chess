@@ -21,7 +21,7 @@ func TestPawnTake(t *testing.T) {
 		moveOf('d', '4', 'e', '5'),
 	)
 }
-func TestPawnTakeWithBlacks(t *testing.T) {
+func TestPawnTakeB(t *testing.T) {
 	// given
 	board := ParseBoardInput("8/8/1PPPPP2/1PPPPP2/1PPpPP2/1PPPPP2/1PPPPP2/8")
 
@@ -41,7 +41,37 @@ func TestPawnTakeWithBlacks(t *testing.T) {
 	)
 }
 
-func TestPawnShouldNotTakeFriendly(t *testing.T) {
+func TestPawnMove(t *testing.T) {
+	// given
+	board := ParseBoardInput("8/8/8/8/3P4/8/8/8")
+
+	// when
+	result := GetAllAggressiveMoves(board, true)
+
+	// then
+	assert.Contains(
+		t,
+		result,
+		moveOf('d', '4', 'd', '5'),
+	)
+}
+
+func TestPawnMoveB(t *testing.T) {
+	// given
+	board := ParseBoardInput("8/8/8/3p4/8/8/8/8")
+
+	// when
+	result := GetAllAggressiveMoves(board, false)
+
+	// then
+	assert.Contains(
+		t,
+		result,
+		moveOf('d', '5', 'd', '4'),
+	)
+}
+
+func xTestPawnShouldNotTakeFriendly(t *testing.T) {
 	// given
 	board := ParseBoardInput("8/8/1PPPPP2/1PPPPP2/1PPPPP2/1PPPPP2/1PPPPP2/8")
 
