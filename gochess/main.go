@@ -112,8 +112,8 @@ func getAvailableMoves(board Board, isWhite bool, origin Position, horizontalDir
 	var moves []Move
 	horizontalSign := horizontalDirection
 	verticalSign := verticalDirection
-	xGoal := origin.x + (horizontalSign * rrange)
-	yGoal := origin.y + (verticalSign * rrange)
+	xGoal := max(0, min(7, origin.x+(horizontalSign*rrange)))
+	yGoal := max(0, min(7, origin.y+(verticalSign*rrange)))
 	if horizontalDirection == 0 {
 		xGoal = origin.x
 		horizontalSign = 1
@@ -293,5 +293,5 @@ func printBoard(b [8][8]byte) {
 	}
 }
 func isDebug() bool {
-	return true
+	return false
 }

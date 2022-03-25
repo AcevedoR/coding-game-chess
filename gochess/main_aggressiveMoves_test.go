@@ -71,6 +71,22 @@ func TestPawnMoveB(t *testing.T) {
 	)
 }
 
+func TestPawnEdges(t *testing.T) {
+	board := ParseBoardInput("P6P/8/8/8/8/8/8/p6p")
+
+	result := GetAllAggressiveMoves(board, true)
+
+	assertEmpty(t, result)
+}
+
+func TestPawnEdgesB(t *testing.T) {
+	board := ParseBoardInput("P6P/8/8/8/8/8/8/p6p")
+
+	result := GetAllAggressiveMoves(board, false)
+
+	assertEmpty(t, result)
+}
+
 func xTestPawnShouldNotTakeFriendly(t *testing.T) {
 	// given
 	board := ParseBoardInput("8/8/1PPPPP2/1PPPPP2/1PPPPP2/1PPPPP2/1PPPPP2/8")
@@ -78,18 +94,8 @@ func xTestPawnShouldNotTakeFriendly(t *testing.T) {
 	// when
 	result := GetAllAggressiveMoves(board, true)
 
-	isResultEmpty := true
 	// then
-	for _, v := range result {
-		if (v != Move{}) {
-			isResultEmpty = false
-		}
-	}
-
-	assert.True(
-		t,
-		isResultEmpty,
-	)
+	assertEmpty(t, result)
 }
 func TestDoNotTryToPlayEnemy(t *testing.T) {
 	// given
@@ -167,6 +173,20 @@ func xTestRockTakeFar(t *testing.T) {
 	)
 }
 
-func moveOf(beginX byte, beginY byte, endX byte, endY byte) Move{
+func moveOf(beginX byte, beginY byte, endX byte, endY byte) Move {
 	return Move{Begin: *PositionOf(beginX, beginY), End: *PositionOf(endX, endY)}
+}
+func assertEmpty(t *testing.T, result []Move) {
+	isResultEmpty := true
+
+	for _, v := range result {
+		if (v != Move{}) {
+			isResultEmpty = false
+		}
+	}
+
+	assert.True(
+		t,
+		isResultEmpty,
+	)
 }
