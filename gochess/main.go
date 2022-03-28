@@ -97,6 +97,8 @@ func GetAllAggressiveMoves(board Board, isWhite bool) []Move {
 			moves = append(moves, getAvailableMoves(board, p.Position, isWhite, -1, -1)...)
 			moves = append(moves, getAvailableMoves(board, p.Position, isWhite, 1, -1)...)
 			moves = append(moves, getAvailableMoves(board, p.Position, isWhite, -1, 1)...)
+		}else if p.Value == 'K' || p.Value == 'k' {
+			
 		}
 	}
 	return moves
