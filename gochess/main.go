@@ -83,6 +83,11 @@ func GetAllAggressiveMoves(board Board, isWhite bool) []Move {
 			moves = append(moves, getAvailableMoves(board, p.Position, isWhite, 0, 1)...)
 			moves = append(moves, getAvailableMoves(board, p.Position, isWhite, -1, 0)...)
 			moves = append(moves, getAvailableMoves(board, p.Position, isWhite, -0, -1)...)
+		}else if p.Value == 'B' || p.Value == 'b' {
+			moves = append(moves, getAvailableMoves(board, p.Position, isWhite, 1, 1)...)
+			moves = append(moves, getAvailableMoves(board, p.Position, isWhite, -1, -1)...)
+			moves = append(moves, getAvailableMoves(board, p.Position, isWhite, 1, -1)...)
+			moves = append(moves, getAvailableMoves(board, p.Position, isWhite, -1, 1)...)
 		}
 	}
 	return moves
