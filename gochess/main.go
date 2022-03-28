@@ -77,9 +77,7 @@ func GetAllAggressiveMoves(board Board, isWhite bool) []Move {
 	for i := 0; i < len(colorPieces); i++ {
 		p := colorPieces[i]
 		if p.Value == 'P' || p.Value == 'p' {
-			appendMoveIfPresent(&moves, getAvailableLineTake(board, isWhite, p.Position, 1, vmod, true))
-			appendMoveIfPresent(&moves, getAvailableLineTake(board, isWhite, p.Position, -1, vmod, true))
-			appendMoveIfPresent(&moves, getAvailableMoves(board, isWhite, p.Position, 0, vmod, 1))
+			moves = append(moves, getPawnMoves(board.Grid, vmod, p.Position)...)
 		} else if p.Value == 'P' || p.Value == 'p' {
 			// up := AddPieceMovesIfValid(board, isWhite, p.Position.x, p.Position.y, p.Position.x, p.Position.y + 1)
 
@@ -106,14 +104,13 @@ func getAvailableLineTake(board Board, isWhite bool, origin Position, horizontal
 
 	return Move{}
 }
-func getAvailableMoves(board Board, isWhite bool, origin Position, horizontalDirection int, verticalDirection int, rrange int) Move {
-	// TODO test with big range
+func getAvailableMoves(board Board, isWhite bool, origin Position, horizontalDirection int, verticalDirection int) []Move {
 	var auditBoard [8][8]byte
-	var moves []Move
+	var moves []Move = []Move{}
 	horizontalSign := horizontalDirection
 	verticalSign := verticalDirection
-	xGoal := max(0, min(7, origin.x+(horizontalSign*rrange)))
-	yGoal := max(0, min(7, origin.y+(verticalSign*rrange)))
+	xGoal := max(0, min(7, origin.x+horizontalSign))
+	yGoal := max(0, min(7, origin.y+verticalSign))
 	if horizontalDirection == 0 {
 		xGoal = origin.x
 		horizontalSign = 1
@@ -125,19 +122,39 @@ func getAvailableMoves(board Board, isWhite bool, origin Position, horizontalDir
 
 	for x := max(0, min(7, (origin.x)+horizontalDirection)); x >= 0 && x <= xGoal; x += horizontalSign {
 		for y := max(0, min(7, (origin.y)+verticalDirection)); y >= 0 && y <= yGoal; y += verticalSign {
+			if x == origin.x && y == origin.y {
+				return moves
+			}
 			target := board.Grid[x][y]
-			auditBoard[x][y] = 'o'
 			if target == 0 {
 				auditBoard[x][y] = 'x'
 				moves = append(moves, Move{Begin: Position{x: origin.x, y: origin.y}, End: Position{x: x, y: y}})
+			} else {
+				auditBoard[x][y] = 'o'
+				moves = append(moves, Move{Begin: Position{x: origin.x, y: origin.y}, End: Position{x: x, y: y}})
+				return moves
 			}
 		}
 	}
 	printBoard(auditBoard)
-	if len(moves) > 0 {
-		return moves[0]
+
+	return moves
+}
+func getPawnMoves(grid [8][8]byte, vmod int, origin Position) []Move {
+	var moves []Move = []Move{}
+	if origin.y+vmod < 1 || origin.y+vmod > 6 {
+		return moves
 	}
-	return Move{}
+	if grid[origin.x][origin.y+vmod] == 0 {
+		moves = append(moves, moveOf(origin.x, origin.y, origin.x, origin.y+vmod))
+	}
+	if origin.x < 7 && grid[origin.x+1][origin.y+vmod] != 0 {
+		moves = append(moves, moveWithTakeOf(origin.x, origin.y, origin.x+1, origin.y+vmod))
+	}
+	if origin.x > 0 && grid[origin.x-1][origin.y+vmod] != 0 {
+		moves = append(moves, moveWithTakeOf(origin.x, origin.y, origin.x-1, origin.y+vmod))
+	}
+	return moves
 }
 func appendMoveIfPresent(moves *[]Move, move Move) {
 	if (move != Move{}) {
@@ -266,6 +283,12 @@ type Move struct {
 	End   Position
 }
 
+func moveOf(ox int, oy int, tx int, ty int) Move {
+	return Move{Begin: Position{x: ox, y: oy}, End: Position{x: tx, y: ty}}
+}
+func moveWithTakeOf(ox int, oy int, tx int, ty int) Move {
+	return Move{Begin: Position{x: ox, y: oy}, End: Position{x: tx, y: ty}}
+}
 func (m Move) Format() string {
 	return m.Begin.Format() + m.End.Format()
 }
@@ -293,5 +316,5 @@ func printBoard(b [8][8]byte) {
 	}
 }
 func isDebug() bool {
-	return false
+	return true
 }

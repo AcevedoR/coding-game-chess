@@ -14,11 +14,11 @@ func TestPawnTake(t *testing.T) {
 	result := GetAllAggressiveMoves(board, true)
 
 	// then
-	assert.Contains(
+	assertContainsOnly(
 		t,
 		result,
-		moveOf('d', '4', 'c', '5'),
-		moveOf('d', '4', 'e', '5'),
+		moveOff('d', '4', 'c', '5'),
+		moveOff('d', '4', 'e', '5'),
 	)
 }
 func TestPawnTakeB(t *testing.T) {
@@ -29,15 +29,11 @@ func TestPawnTakeB(t *testing.T) {
 	result := GetAllAggressiveMoves(board, false)
 
 	// then
-	assert.Contains(
+	assertContainsOnly(
 		t,
 		result,
-		moveOf('d', '4', 'c', '3'),
-	)
-	assert.Contains(
-		t,
-		result,
-		moveOf('d', '4', 'e', '3'),
+		moveOff('d', '4', 'c', '3'),
+		moveOff('d', '4', 'e', '3'),
 	)
 }
 
@@ -49,10 +45,10 @@ func TestPawnMove(t *testing.T) {
 	result := GetAllAggressiveMoves(board, true)
 
 	// then
-	assert.Contains(
+	assertContainsOnly(
 		t,
 		result,
-		moveOf('d', '4', 'd', '5'),
+		moveOff('d', '4', 'd', '5'),
 	)
 }
 
@@ -64,10 +60,10 @@ func TestPawnMoveB(t *testing.T) {
 	result := GetAllAggressiveMoves(board, false)
 
 	// then
-	assert.Contains(
+	assertContainsOnly(
 		t,
 		result,
-		moveOf('d', '5', 'd', '4'),
+		moveOff('d', '5', 'd', '4'),
 	)
 }
 
@@ -109,7 +105,7 @@ func TestDoNotTryToPlayEnemy(t *testing.T) {
 	assert.NotContains(
 		t,
 		result,
-		moveOf('c', '6', 'd', '7'),
+		moveOff('c', '6', 'd', '7'),
 	)
 }
 func xTestRockTakeClose(t *testing.T) {
@@ -120,25 +116,25 @@ func xTestRockTakeClose(t *testing.T) {
 	result := GetAllAggressiveMoves(board, true)
 
 	// then
-	assert.Contains(
+	assertContainsOnly(
 		t,
 		result,
-		moveOf('d', '4', 'd', '5'),
+		moveOff('d', '4', 'd', '5'),
 	)
-	assert.Contains(
+	assertContainsOnly(
 		t,
 		result,
-		moveOf('d', '4', 'd', '3'),
+		moveOff('d', '4', 'd', '3'),
 	)
-	assert.Contains(
+	assertContainsOnly(
 		t,
 		result,
-		moveOf('d', '4', 'e', '4'),
+		moveOff('d', '4', 'e', '4'),
 	)
-	assert.Contains(
+	assertContainsOnly(
 		t,
 		result,
-		moveOf('d', '4', 'c', '4'),
+		moveOff('d', '4', 'c', '4'),
 	)
 
 }
@@ -151,29 +147,29 @@ func xTestRockTakeFar(t *testing.T) {
 	result := GetAllAggressiveMoves(board, true)
 
 	// then
-	assert.Contains(
+	assertContainsOnly(
 		t,
 		result,
-		moveOf('d', '4', 'd', '8'),
+		moveOff('d', '4', 'd', '8'),
 	)
-	assert.Contains(
+	assertContainsOnly(
 		t,
 		result,
-		moveOf('d', '4', 'h', '4'),
+		moveOff('d', '4', 'h', '4'),
 	)
-	assert.Contains(
+	assertContainsOnly(
 		t,
 		result,
-		moveOf('d', '4', 'd', '2'),
+		moveOff('d', '4', 'd', '2'),
 	)
-	assert.Contains(
+	assertContainsOnly(
 		t,
 		result,
-		moveOf('d', '4', 'b', '4'),
+		moveOff('d', '4', 'b', '4'),
 	)
 }
 
-func moveOf(beginX byte, beginY byte, endX byte, endY byte) Move {
+func moveOff(beginX byte, beginY byte, endX byte, endY byte) Move {
 	return Move{Begin: *PositionOf(beginX, beginY), End: *PositionOf(endX, endY)}
 }
 func assertEmpty(t *testing.T, result []Move) {
@@ -188,5 +184,30 @@ func assertEmpty(t *testing.T, result []Move) {
 	assert.True(
 		t,
 		isResultEmpty,
+		result,
 	)
+}
+func assertContains(t *testing.T, slice []Move, expected ...Move){
+	for i := range expected {
+		assert.Contains(
+			t,
+			slice,
+			expected[i],
+			"expected: ",
+			expected,
+			"received: ",
+			slice,
+		)
+	}
+}
+func assertContainsOnly(t *testing.T, slice []Move, expected ...Move){
+	assert.True(
+		t,
+		len(slice) == len(expected),
+		"expected: ",
+		expected,
+		"to have same lenght as: ",
+		slice,
+	)
+	assertContains(t, slice , expected...)
 }
