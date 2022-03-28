@@ -108,7 +108,7 @@ func TestDoNotTryToPlayEnemy(t *testing.T) {
 		moveOff('c', '6', 'd', '7'),
 	)
 }
-func xTestRockTakeClose(t *testing.T) {
+func TestRockTakeClose(t *testing.T) {
 	// given
 	board := ParseBoardInput("8/8/1ppppp2/1ppppp2/1ppRpp2/1ppppp2/1ppppp2/8")
 
@@ -116,55 +116,31 @@ func xTestRockTakeClose(t *testing.T) {
 	result := GetAllAggressiveMoves(board, true)
 
 	// then
-	assertContainsOnly(
+	assertContains(
 		t,
 		result,
 		moveOff('d', '4', 'd', '5'),
-	)
-	assertContainsOnly(
-		t,
-		result,
 		moveOff('d', '4', 'd', '3'),
-	)
-	assertContainsOnly(
-		t,
-		result,
 		moveOff('d', '4', 'e', '4'),
-	)
-	assertContainsOnly(
-		t,
-		result,
 		moveOff('d', '4', 'c', '4'),
 	)
 
 }
 
-func xTestRockTakeFar(t *testing.T) {
+func TestRockTakeFar(t *testing.T) {
 	// given
-	board := ParseBoardInput("8/8/1ppppp2/1ppppp2/1ppRpp2/1ppppp2/1ppppp2/8")
+	board := ParseBoardInput("3p4/8/8/8/1p1R3p/8/3p4/8")
 
 	// when
 	result := GetAllAggressiveMoves(board, true)
 
 	// then
-	assertContainsOnly(
+	assertContains(
 		t,
 		result,
 		moveOff('d', '4', 'd', '8'),
-	)
-	assertContainsOnly(
-		t,
-		result,
 		moveOff('d', '4', 'h', '4'),
-	)
-	assertContainsOnly(
-		t,
-		result,
 		moveOff('d', '4', 'd', '2'),
-	)
-	assertContainsOnly(
-		t,
-		result,
 		moveOff('d', '4', 'b', '4'),
 	)
 }

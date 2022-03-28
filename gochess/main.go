@@ -78,9 +78,11 @@ func GetAllAggressiveMoves(board Board, isWhite bool) []Move {
 		p := colorPieces[i]
 		if p.Value == 'P' || p.Value == 'p' {
 			moves = append(moves, getPawnMoves(board.Grid, vmod, p.Position)...)
-		} else if p.Value == 'P' || p.Value == 'p' {
-			// up := AddPieceMovesIfValid(board, isWhite, p.Position.x, p.Position.y, p.Position.x, p.Position.y + 1)
-
+		} else if p.Value == 'R' || p.Value == 'r' {
+			moves = append(moves, getAvailableMoves(board, p.Position, 1, 0)...)
+			moves = append(moves, getAvailableMoves(board, p.Position, 0, 1)...)
+			moves = append(moves, getAvailableMoves(board, p.Position, -1, 0)...)
+			moves = append(moves, getAvailableMoves(board, p.Position, -0, -1)...)
 		}
 	}
 	return moves
@@ -104,25 +106,24 @@ func getAvailableLineTake(board Board, isWhite bool, origin Position, horizontal
 
 	return Move{}
 }
-func getAvailableMoves(board Board, isWhite bool, origin Position, horizontalDirection int, verticalDirection int) []Move {
+func getAvailableMoves(board Board, origin Position, horizontalDirection int, verticalDirection int) []Move {
 	var auditBoard [8][8]byte
 	var moves []Move = []Move{}
 	horizontalSign := horizontalDirection
 	verticalSign := verticalDirection
-	xGoal := max(0, min(7, origin.x+horizontalSign))
-	yGoal := max(0, min(7, origin.y+verticalSign))
 	if horizontalDirection == 0 {
-		xGoal = origin.x
 		horizontalSign = 1
 	}
 	if verticalDirection == 0 {
-		yGoal = origin.y
 		verticalSign = 1
 	}
 
-	for x := max(0, min(7, (origin.x)+horizontalDirection)); x >= 0 && x <= xGoal; x += horizontalSign {
-		for y := max(0, min(7, (origin.y)+verticalDirection)); y >= 0 && y <= yGoal; y += verticalSign {
+	for x := max(0, min(7, (origin.x)+horizontalDirection)); x >= 0 && x <= 7; x += horizontalSign {
+		for y := max(0, min(7, (origin.y)+verticalDirection)); y >= 0 && y <= 7; y += verticalSign {
+			auditBoard[x][y] = '-'
+			
 			if x == origin.x && y == origin.y {
+				printBoard(auditBoard)
 				return moves
 			}
 			target := board.Grid[x][y]
@@ -132,6 +133,7 @@ func getAvailableMoves(board Board, isWhite bool, origin Position, horizontalDir
 			} else {
 				auditBoard[x][y] = 'o'
 				moves = append(moves, Move{Begin: Position{x: origin.x, y: origin.y}, End: Position{x: x, y: y}})
+				printBoard(auditBoard)
 				return moves
 			}
 		}
