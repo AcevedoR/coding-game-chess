@@ -83,7 +83,7 @@ func TestPawnEdgesB(t *testing.T) {
 	assertEmpty(t, result)
 }
 
-func xTestPawnShouldNotTakeFriendly(t *testing.T) {
+func TestPawnShouldNotTakeFriendly(t *testing.T) {
 	// given
 	board := ParseBoardInput("8/8/1PPPPP2/1PPPPP2/1PPPPP2/1PPPPP2/1PPPPP2/8")
 
@@ -91,7 +91,21 @@ func xTestPawnShouldNotTakeFriendly(t *testing.T) {
 	result := GetAllAggressiveMoves(board, true)
 
 	// then
-	assertEmpty(t, result)
+	assert.NotContains(
+		t,
+		result,
+		moveOff('d', '4', 'e', '1'),
+		moveOff('d', '4', 'e', '2'),
+		moveOff('d', '4', 'e', '3'),
+		moveOff('d', '4', 'e', '4'),
+		moveOff('d', '4', 'e', '5'),
+		moveOff('d', '4', 'c', '1'),
+		moveOff('d', '4', 'c', '2'),
+		moveOff('d', '4', 'c', '3'),
+		moveOff('d', '4', 'c', '4'),
+		moveOff('d', '4', 'c', '5'),
+		moveOff('d', '4', 'd', '5'),
+	)
 }
 func TestDoNotTryToPlayEnemy(t *testing.T) {
 	// given

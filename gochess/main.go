@@ -77,36 +77,17 @@ func GetAllAggressiveMoves(board Board, isWhite bool) []Move {
 	for i := 0; i < len(colorPieces); i++ {
 		p := colorPieces[i]
 		if p.Value == 'P' || p.Value == 'p' {
-			moves = append(moves, getPawnMoves(board.Grid, vmod, p.Position)...)
+			moves = append(moves, getPawnMoves(board.Grid, isWhite, vmod, p.Position)...)
 		} else if p.Value == 'R' || p.Value == 'r' {
-			moves = append(moves, getAvailableMoves(board, p.Position, 1, 0)...)
-			moves = append(moves, getAvailableMoves(board, p.Position, 0, 1)...)
-			moves = append(moves, getAvailableMoves(board, p.Position, -1, 0)...)
-			moves = append(moves, getAvailableMoves(board, p.Position, -0, -1)...)
+			moves = append(moves, getAvailableMoves(board, p.Position, isWhite, 1, 0)...)
+			moves = append(moves, getAvailableMoves(board, p.Position, isWhite, 0, 1)...)
+			moves = append(moves, getAvailableMoves(board, p.Position, isWhite, -1, 0)...)
+			moves = append(moves, getAvailableMoves(board, p.Position, isWhite, -0, -1)...)
 		}
 	}
 	return moves
 }
-func getAvailableLineTake(board Board, isWhite bool, origin Position, horizontalDirection int, verticalDirection int, adjacent bool) Move {
-	xGoal := 7
-	yGoal := 7
-	if adjacent {
-		xGoal = max(0, min(7, origin.x+horizontalDirection))
-		yGoal = max(0, min(7, origin.y+verticalDirection))
-	}
-	for x := max(0, min(7, origin.x+horizontalDirection)); x <= xGoal; x++ {
-		for y := max(0, min(7, origin.y+verticalDirection)); y <= yGoal; y++ {
-			target := board.Grid[x][y]
-
-			if target != 0 && determineIfWhite(target) != isWhite {
-				return Move{Begin: Position{x: origin.x, y: origin.y}, End: Position{x: x, y: y}}
-			}
-		}
-	}
-
-	return Move{}
-}
-func getAvailableMoves(board Board, origin Position, horizontalDirection int, verticalDirection int) []Move {
+func getAvailableMoves(board Board, origin Position, isWhite bool, horizontalDirection int, verticalDirection int) []Move {
 	var auditBoard [8][8]byte
 	var moves []Move = []Move{}
 	horizontalSign := horizontalDirection
@@ -121,7 +102,7 @@ func getAvailableMoves(board Board, origin Position, horizontalDirection int, ve
 	for x := max(0, min(7, (origin.x)+horizontalDirection)); x >= 0 && x <= 7; x += horizontalSign {
 		for y := max(0, min(7, (origin.y)+verticalDirection)); y >= 0 && y <= 7; y += verticalSign {
 			auditBoard[x][y] = '-'
-			
+
 			if x == origin.x && y == origin.y {
 				printBoard(auditBoard)
 				return moves
@@ -130,10 +111,12 @@ func getAvailableMoves(board Board, origin Position, horizontalDirection int, ve
 			if target == 0 {
 				auditBoard[x][y] = 'x'
 				moves = append(moves, Move{Begin: Position{x: origin.x, y: origin.y}, End: Position{x: x, y: y}})
-			} else {
+			} else if determineIfWhite(target) != isWhite {
 				auditBoard[x][y] = 'o'
 				moves = append(moves, Move{Begin: Position{x: origin.x, y: origin.y}, End: Position{x: x, y: y}})
 				printBoard(auditBoard)
+				return moves
+			} else {
 				return moves
 			}
 		}
@@ -142,7 +125,7 @@ func getAvailableMoves(board Board, origin Position, horizontalDirection int, ve
 
 	return moves
 }
-func getPawnMoves(grid [8][8]byte, vmod int, origin Position) []Move {
+func getPawnMoves(grid [8][8]byte, isWhite bool, vmod int, origin Position) []Move {
 	var moves []Move = []Move{}
 	if origin.y+vmod < 1 || origin.y+vmod > 6 {
 		return moves
@@ -150,10 +133,10 @@ func getPawnMoves(grid [8][8]byte, vmod int, origin Position) []Move {
 	if grid[origin.x][origin.y+vmod] == 0 {
 		moves = append(moves, moveOf(origin.x, origin.y, origin.x, origin.y+vmod))
 	}
-	if origin.x < 7 && grid[origin.x+1][origin.y+vmod] != 0 {
+	if origin.x < 7 && grid[origin.x+1][origin.y+vmod] != 0 && determineIfWhite(grid[origin.x+1][origin.y+vmod]) != isWhite {
 		moves = append(moves, moveWithTakeOf(origin.x, origin.y, origin.x+1, origin.y+vmod))
 	}
-	if origin.x > 0 && grid[origin.x-1][origin.y+vmod] != 0 {
+	if origin.x > 0 && grid[origin.x-1][origin.y+vmod] != 0 && determineIfWhite(grid[origin.x-1][origin.y+vmod]) != isWhite {
 		moves = append(moves, moveWithTakeOf(origin.x, origin.y, origin.x-1, origin.y+vmod))
 	}
 	return moves
