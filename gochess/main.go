@@ -77,33 +77,33 @@ func GetAllAggressiveMoves(board Board, isWhite bool) []Move {
 	for i := 0; i < len(colorPieces); i++ {
 		p := colorPieces[i]
 		if p.Value == 'P' || p.Value == 'p' {
-			moves = append(moves, getPawnMoves(board.Grid, isWhite, vmod, p.Position)...)
+			moves = append(moves, getPawnMoves(board.Grid, isWhite, vmod, p.Position, getWeightOfPiece(p))...)
 		} else if p.Value == 'R' || p.Value == 'r' {
-			moves = append(moves, getAvailableMoves(board, p.Position, isWhite, 1, 0)...)
-			moves = append(moves, getAvailableMoves(board, p.Position, isWhite, 0, 1)...)
-			moves = append(moves, getAvailableMoves(board, p.Position, isWhite, -1, 0)...)
-			moves = append(moves, getAvailableMoves(board, p.Position, isWhite, -0, -1)...)
-		}else if p.Value == 'B' || p.Value == 'b' {
-			moves = append(moves, getAvailableMoves(board, p.Position, isWhite, 1, 1)...)
-			moves = append(moves, getAvailableMoves(board, p.Position, isWhite, -1, -1)...)
-			moves = append(moves, getAvailableMoves(board, p.Position, isWhite, 1, -1)...)
-			moves = append(moves, getAvailableMoves(board, p.Position, isWhite, -1, 1)...)
-		}else if p.Value == 'Q' || p.Value == 'q' {
-			moves = append(moves, getAvailableMoves(board, p.Position, isWhite, 1, 0)...)
-			moves = append(moves, getAvailableMoves(board, p.Position, isWhite, 0, 1)...)
-			moves = append(moves, getAvailableMoves(board, p.Position, isWhite, -1, 0)...)
-			moves = append(moves, getAvailableMoves(board, p.Position, isWhite, -0, -1)...)
-			moves = append(moves, getAvailableMoves(board, p.Position, isWhite, 1, 1)...)
-			moves = append(moves, getAvailableMoves(board, p.Position, isWhite, -1, -1)...)
-			moves = append(moves, getAvailableMoves(board, p.Position, isWhite, 1, -1)...)
-			moves = append(moves, getAvailableMoves(board, p.Position, isWhite, -1, 1)...)
-		}else if p.Value == 'K' || p.Value == 'k' {
-			
+			moves = append(moves, getAvailableMoves(board, p.Position, isWhite, 1, 0, getWeightOfPiece(p))...)
+			moves = append(moves, getAvailableMoves(board, p.Position, isWhite, 0, 1, getWeightOfPiece(p))...)
+			moves = append(moves, getAvailableMoves(board, p.Position, isWhite, -1, 0, getWeightOfPiece(p))...)
+			moves = append(moves, getAvailableMoves(board, p.Position, isWhite, -0, -1, getWeightOfPiece(p))...)
+		} else if p.Value == 'B' || p.Value == 'b' {
+			moves = append(moves, getAvailableMoves(board, p.Position, isWhite, 1, 1, getWeightOfPiece(p))...)
+			moves = append(moves, getAvailableMoves(board, p.Position, isWhite, -1, -1, getWeightOfPiece(p))...)
+			moves = append(moves, getAvailableMoves(board, p.Position, isWhite, 1, -1, getWeightOfPiece(p))...)
+			moves = append(moves, getAvailableMoves(board, p.Position, isWhite, -1, 1, getWeightOfPiece(p))...)
+		} else if p.Value == 'Q' || p.Value == 'q' {
+			moves = append(moves, getAvailableMoves(board, p.Position, isWhite, 1, 0, getWeightOfPiece(p))...)
+			moves = append(moves, getAvailableMoves(board, p.Position, isWhite, 0, 1, getWeightOfPiece(p))...)
+			moves = append(moves, getAvailableMoves(board, p.Position, isWhite, -1, 0, getWeightOfPiece(p))...)
+			moves = append(moves, getAvailableMoves(board, p.Position, isWhite, -0, -1, getWeightOfPiece(p))...)
+			moves = append(moves, getAvailableMoves(board, p.Position, isWhite, 1, 1, getWeightOfPiece(p))...)
+			moves = append(moves, getAvailableMoves(board, p.Position, isWhite, -1, -1, getWeightOfPiece(p))...)
+			moves = append(moves, getAvailableMoves(board, p.Position, isWhite, 1, -1, getWeightOfPiece(p))...)
+			moves = append(moves, getAvailableMoves(board, p.Position, isWhite, -1, 1, getWeightOfPiece(p))...)
+		} else if p.Value == 'K' || p.Value == 'k' {
+
 		}
 	}
 	return moves
 }
-func getAvailableMoves(board Board, origin Position, isWhite bool, horizontalDirection int, verticalDirection int) []Move {
+func getAvailableMoves(board Board, origin Position, isWhite bool, horizontalDirection int, verticalDirection int, weight int) []Move {
 	var auditBoard [8][8]byte
 	var moves []Move = []Move{}
 	horizontalSign := horizontalDirection
@@ -126,10 +126,10 @@ func getAvailableMoves(board Board, origin Position, isWhite bool, horizontalDir
 			target := board.Grid[x][y]
 			if target == 0 {
 				auditBoard[x][y] = 'x'
-				moves = append(moves, Move{Begin: Position{x: origin.x, y: origin.y}, End: Position{x: x, y: y}})
+				moves = append(moves, moveOf(origin.x, origin.y, x, y))
 			} else if determineIfWhite(target) != isWhite {
 				auditBoard[x][y] = 'o'
-				moves = append(moves, Move{Begin: Position{x: origin.x, y: origin.y}, End: Position{x: x, y: y}})
+				moves = append(moves, moveWithTakeOf(origin.x, origin.y, x, y, weight, getWeight(target)))
 				printBoard(auditBoard)
 				return moves
 			} else {
@@ -141,7 +141,7 @@ func getAvailableMoves(board Board, origin Position, isWhite bool, horizontalDir
 
 	return moves
 }
-func getPawnMoves(grid [8][8]byte, isWhite bool, vmod int, origin Position) []Move {
+func getPawnMoves(grid [8][8]byte, isWhite bool, vmod int, origin Position, weight int) []Move {
 	var moves []Move = []Move{}
 	if origin.y+vmod < 1 || origin.y+vmod > 6 {
 		return moves
@@ -150,10 +150,10 @@ func getPawnMoves(grid [8][8]byte, isWhite bool, vmod int, origin Position) []Mo
 		moves = append(moves, moveOf(origin.x, origin.y, origin.x, origin.y+vmod))
 	}
 	if origin.x < 7 && grid[origin.x+1][origin.y+vmod] != 0 && determineIfWhite(grid[origin.x+1][origin.y+vmod]) != isWhite {
-		moves = append(moves, moveWithTakeOf(origin.x, origin.y, origin.x+1, origin.y+vmod))
+		moves = append(moves, moveWithTakeOf(origin.x, origin.y, origin.x+1, origin.y+vmod, weight, getWeight(grid[origin.x+1][origin.y+vmod])))
 	}
 	if origin.x > 0 && grid[origin.x-1][origin.y+vmod] != 0 && determineIfWhite(grid[origin.x-1][origin.y+vmod]) != isWhite {
-		moves = append(moves, moveWithTakeOf(origin.x, origin.y, origin.x-1, origin.y+vmod))
+		moves = append(moves, moveWithTakeOf(origin.x, origin.y, origin.x-1, origin.y+vmod, weight, getWeight(grid[origin.x-1][origin.y+vmod])))
 	}
 	return moves
 }
@@ -282,13 +282,36 @@ func (p Position) Format() string {
 type Move struct {
 	Begin Position
 	End   Position
+	Value int
+}
+
+func getWeightOfPiece(p Piece) int {
+	return getWeight(p.Value)
+}
+func getWeight(p byte) int {
+	if p == 'P' || p == 'p' {
+		return 1
+	} else if p == 'R' || p == 'r' {
+		return 10
+	} else if p == 'Q' || p == 'q' {
+		return 30
+	} else if p == 'B' || p == 'b' {
+		return 10
+	} else if p == 'N' || p == 'n' {
+		return 5
+	} else if p == 'K' || p == 'k' {
+		return 9999
+	} else {
+		return 0
+	}
+
 }
 
 func moveOf(ox int, oy int, tx int, ty int) Move {
 	return Move{Begin: Position{x: ox, y: oy}, End: Position{x: tx, y: ty}}
 }
-func moveWithTakeOf(ox int, oy int, tx int, ty int) Move {
-	return Move{Begin: Position{x: ox, y: oy}, End: Position{x: tx, y: ty}}
+func moveWithTakeOf(ox int, oy int, tx int, ty int, oWeight int, tWeight int) Move {
+	return Move{Begin: Position{x: ox, y: oy}, End: Position{x: tx, y: ty}, Value: tWeight - oWeight}
 }
 func (m Move) Format() string {
 	return m.Begin.Format() + m.End.Format()

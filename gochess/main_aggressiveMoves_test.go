@@ -236,27 +236,26 @@ func assertEmpty(t *testing.T, result []Move) {
 		result,
 	)
 }
-func assertContains(t *testing.T, slice []Move, expected ...Move){
-	for i := range expected {
-		assert.Contains(
-			t,
-			slice,
-			expected[i],
-			"expected: ",
-			expected,
-			"received: ",
-			slice,
-		)
+func assertContains(t *testing.T, slice []Move, expectedSlice ...Move){
+	var missing []Move = []Move{}
+	for _, expected := range expectedSlice {
+		found := false
+		for _, move := range slice {
+			if move.Begin == expected.Begin && move.End == expected.End {
+				found = true
+			}
+		}
+		if !found {
+			missing = append(missing, expected)
+		}
+	}
+	if len(missing) > 0 {
+		t.Errorf("\nInput: \n%+v \n\ndid not contain all of: \n%+v\n\n missing:\n %+v\n", slice, expectedSlice, missing)
 	}
 }
 func assertContainsOnly(t *testing.T, slice []Move, expected ...Move){
-	assert.True(
-		t,
-		len(slice) == len(expected),
-		"expected: ",
-		expected,
-		"to have same lenght as: ",
-		slice,
-	)
 	assertContains(t, slice , expected...)
+	if len(slice) != len(expected){
+		t.Errorf("\nExpected \n%+v \nwith size %d \n\ndid not contain ONLY all of:\n%+v\n of size %d\n", expected, slice,len(expected), len(slice))
+	}
 }
