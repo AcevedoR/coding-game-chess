@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"github.com/olekukonko/tablewriter"
 	"math/rand"
 	"os"
 )
@@ -47,16 +46,30 @@ func main() {
 }
 
 func Play(boardInput string, isWhite bool, moves []string, moveHistory *[]Move) {
-	legalMoves := ParseMoves(moves)
-	move := GetBestMove(ParseBoardInput(boardInput), isWhite, legalMoves)
+	move := GetBestPlay(moves, boardInput, isWhite)
 	fmt.Println(move.Format()) // Write action to stdout
 	*moveHistory = append(*moveHistory, move)
 }
 
+func GetBestPlay(moves []string, boardInput string, isWhite bool) Move {
+	board := ParseBoardInput(boardInput)
+	// legalMoves := ParseMoves(moves)
+	// move := GetBestMove(board, isWhite, legalMoves)
+	move := GetBestMoveMinMax(board, isWhite, MinMaxScore{Move{}, 0}, 3).Move
+	return move
+}
+
 func GetBestMove(board Board, isWhite bool, legalMoves []Move) Move {
 	aggressiveMoves := GetAllAggressiveMoves(board, isWhite)
+
 	if len(aggressiveMoves) > 0 {
-		return aggressiveMoves[0]
+		max := aggressiveMoves[0]
+		for _, move := range aggressiveMoves {
+			if move.Value > max.Value {
+				max = move
+			}
+		}
+		return max
 	}
 	if len(legalMoves) > 1 {
 		return legalMoves[rand.Intn(len(legalMoves)-1)]
@@ -65,11 +78,56 @@ func GetBestMove(board Board, isWhite bool, legalMoves []Move) Move {
 	}
 }
 
+func GetBestMoveMinMax(board Board, isWhite bool, previousScore MinMaxScore, depth int) MinMaxScore {
+	if depth == 0 {
+		return MinMaxScore{Move{}, board.GetPositionalScore()}
+	}
+	printBoard(board.Grid)
+	if isWhite {
+		//max
+		moves := GetAllAggressiveMoves(board, isWhite)
+		value := MinMaxScore{Move{}, -9999}
+		for i := 0; i < len(moves); i++ {
+			currentBoard := board.Move(moves[i])
+			score := board.GetPositionalScore()
+			curMax := GetBestMoveMinMax(currentBoard, false, MinMaxScore{moves[i], score}, depth-1)
+			if curMax.Score > value.Score {
+				value = curMax
+				value.Move = moves[i]
+			}
+		}
+		if value.Move.End.x == 0 && value.Move.End.y == 1 {
+			printBoard(board.Grid)
+		}
+		return value
+	} else {
+		//min
+		moves := GetAllAggressiveMoves(board, isWhite)
+		value := MinMaxScore{Move{}, 9999}
+		for i := 0; i < len(moves); i++ {
+			currentBoard := board.Move(moves[i])
+			score := board.GetPositionalScore()
+			curMin := GetBestMoveMinMax(currentBoard, true, MinMaxScore{moves[i], score}, depth-1)
+			if curMin.Score < value.Score {
+				value = curMin
+				value.Move = moves[i]
+			}
+		}
+		return value
+	}
+}
+
+type MinMaxScore struct {
+	Move  Move
+	Score int
+}
+
 func GetAllAggressiveMoves(board Board, isWhite bool) []Move {
 	vmod := 1
-	var colorPieces *[30]Piece = &board.WhitePieces
+	whites, blacks := board.GetPieces()
+	var colorPieces []Piece = whites
 	if !isWhite {
-		colorPieces = &board.BlackPieces
+		colorPieces = blacks
 		vmod = -1
 	}
 
@@ -84,19 +142,19 @@ func GetAllAggressiveMoves(board Board, isWhite bool) []Move {
 			moves = append(moves, getAvailableMoves(board, p.Position, isWhite, -1, 0, getWeightOfPiece(p))...)
 			moves = append(moves, getAvailableMoves(board, p.Position, isWhite, -0, -1, getWeightOfPiece(p))...)
 		} else if p.Value == 'B' || p.Value == 'b' {
-			moves = append(moves, getAvailableMoves(board, p.Position, isWhite, 1, 1, getWeightOfPiece(p))...)
-			moves = append(moves, getAvailableMoves(board, p.Position, isWhite, -1, -1, getWeightOfPiece(p))...)
-			moves = append(moves, getAvailableMoves(board, p.Position, isWhite, 1, -1, getWeightOfPiece(p))...)
-			moves = append(moves, getAvailableMoves(board, p.Position, isWhite, -1, 1, getWeightOfPiece(p))...)
+			moves = append(moves, getDiagonalMoves(board, p.Position, isWhite, 1, 1, getWeightOfPiece(p))...)
+			moves = append(moves, getDiagonalMoves(board, p.Position, isWhite, -1, -1, getWeightOfPiece(p))...)
+			moves = append(moves, getDiagonalMoves(board, p.Position, isWhite, -1, 1, getWeightOfPiece(p))...)
+			moves = append(moves, getDiagonalMoves(board, p.Position, isWhite, 1, -1, getWeightOfPiece(p))...)
 		} else if p.Value == 'Q' || p.Value == 'q' {
 			moves = append(moves, getAvailableMoves(board, p.Position, isWhite, 1, 0, getWeightOfPiece(p))...)
 			moves = append(moves, getAvailableMoves(board, p.Position, isWhite, 0, 1, getWeightOfPiece(p))...)
 			moves = append(moves, getAvailableMoves(board, p.Position, isWhite, -1, 0, getWeightOfPiece(p))...)
 			moves = append(moves, getAvailableMoves(board, p.Position, isWhite, -0, -1, getWeightOfPiece(p))...)
-			moves = append(moves, getAvailableMoves(board, p.Position, isWhite, 1, 1, getWeightOfPiece(p))...)
-			moves = append(moves, getAvailableMoves(board, p.Position, isWhite, -1, -1, getWeightOfPiece(p))...)
-			moves = append(moves, getAvailableMoves(board, p.Position, isWhite, 1, -1, getWeightOfPiece(p))...)
-			moves = append(moves, getAvailableMoves(board, p.Position, isWhite, -1, 1, getWeightOfPiece(p))...)
+			moves = append(moves, getDiagonalMoves(board, p.Position, isWhite, 1, 1, getWeightOfPiece(p))...)
+			moves = append(moves, getDiagonalMoves(board, p.Position, isWhite, -1, -1, getWeightOfPiece(p))...)
+			moves = append(moves, getDiagonalMoves(board, p.Position, isWhite, 1, -1, getWeightOfPiece(p))...)
+			moves = append(moves, getDiagonalMoves(board, p.Position, isWhite, -1, 1, getWeightOfPiece(p))...)
 		} else if p.Value == 'K' || p.Value == 'k' {
 
 		}
@@ -115,8 +173,8 @@ func getAvailableMoves(board Board, origin Position, isWhite bool, horizontalDir
 		verticalSign = 1
 	}
 
-	for x := max(0, min(7, (origin.x)+horizontalDirection)); x >= 0 && x <= 7; x += horizontalSign {
-		for y := max(0, min(7, (origin.y)+verticalDirection)); y >= 0 && y <= 7; y += verticalSign {
+	for x := origin.x + horizontalDirection; x >= 0 && x <= 7; x += horizontalSign {
+		for y := origin.y + verticalDirection; y >= 0 && y <= 7; y += verticalSign {
 			auditBoard[x][y] = '-'
 
 			if x == origin.x && y == origin.y {
@@ -139,6 +197,25 @@ func getAvailableMoves(board Board, origin Position, isWhite bool, horizontalDir
 	}
 	printBoard(auditBoard)
 
+	return moves
+}
+func getDiagonalMoves(board Board, origin Position, isWhite bool, horizontalDirection int, verticalDirection int, weight int) []Move {
+	x := origin.x + horizontalDirection
+	y := origin.y + verticalDirection
+	var moves []Move = []Move{}
+	for x >= 0 && x <= 7 && y >= 0 && y <= 7 {
+		target := board.Grid[x][y]
+		if target == 0 {
+			moves = append(moves, moveOf(origin.x, origin.y, x, y))
+		} else if determineIfWhite(target) != isWhite {
+			moves = append(moves, moveWithTakeOf(origin.x, origin.y, x, y, weight, getWeight(target)))
+			return moves
+		} else {
+			return moves
+		}
+		x += horizontalDirection
+		y += verticalDirection
+	}
 	return moves
 }
 func getPawnMoves(grid [8][8]byte, isWhite bool, vmod int, origin Position, weight int) []Move {
@@ -248,17 +325,39 @@ func ParseBoardInput(boardInput string) Board {
 	// }
 	// fmt.Fprintln(os.Stderr, "---------")
 	printBoard(board)
-	return Board{Grid: board, WhitePieces: whitePieces, BlackPieces: blackPieces}
+	return Board{Grid: board}
 }
 
 type Board struct {
-	Grid        [8][8]byte
-	WhitePieces [30]Piece
-	BlackPieces [30]Piece
+	Grid [8][8]byte
 }
 
 func (b Board) get(column byte, line int) byte {
 	return b.Grid[column-97][line-1]
+}
+func (b Board) GetPieces() (whitePieces []Piece, blackPieces []Piece) {
+	whitePieces = make([]Piece, 0)
+	blackPieces = make([]Piece, 0)
+	for x := 0; x < 8; x++ {
+		for y := 0; y < 8; y++ {
+			square := b.Grid[x][y]
+			if square != 0 {
+				piece := Piece{square, Position{x, y}}
+				if determineIfWhite(byte(square)) {
+					whitePieces = append(whitePieces, piece)
+				} else {
+					blackPieces = append(blackPieces, piece)
+				}
+			}
+		}
+	}
+	return whitePieces, blackPieces
+}
+func (b Board) Move(move Move) Board {
+	piece := b.Grid[move.Begin.x][move.Begin.y]
+	b.Grid[move.Begin.x][move.Begin.y] = 0
+	b.Grid[move.End.x][move.End.y] = piece
+	return b
 }
 
 type Piece struct {
@@ -285,22 +384,34 @@ type Move struct {
 	Value int
 }
 
+func (b Board) GetPositionalScore() int {
+	whiteScore := 0
+	blackScore := 0
+	whites, blacks := b.GetPieces()
+	for i := 0; i < len(whites); i++ {
+		whiteScore += getWeightOfPiece(whites[i])
+	}
+	for i := 0; i < len(blacks); i++ {
+		blackScore += getWeightOfPiece(blacks[i])
+	}
+	return whiteScore - blackScore
+}
 func getWeightOfPiece(p Piece) int {
 	return getWeight(p.Value)
 }
 func getWeight(p byte) int {
 	if p == 'P' || p == 'p' {
-		return 1
-	} else if p == 'R' || p == 'r' {
 		return 10
+	} else if p == 'R' || p == 'r' {
+		return 30
 	} else if p == 'Q' || p == 'q' {
 		return 30
 	} else if p == 'B' || p == 'b' {
-		return 10
+		return 30
 	} else if p == 'N' || p == 'n' {
-		return 5
+		return 20
 	} else if p == 'K' || p == 'k' {
-		return 9999
+		return 900
 	} else {
 		return 0
 	}
@@ -330,15 +441,15 @@ func printBoard(b [8][8]byte) {
 			data = append(data, line)
 		}
 
-		table := tablewriter.NewWriter(os.Stdout)
-		table.SetFooter([]string{" ", "a", "b", "c", "d", "e", "f", "g", "h"})
+		// table := tablewriter.NewWriter(os.Stdout)
+		// table.SetFooter([]string{" ", "a", "b", "c", "d", "e", "f", "g", "h"})
 
-		for _, v := range data {
-			table.Append(v)
-		}
-		table.Render() // Send output
+		// for _, v := range data {
+		// 	table.Append(v)
+		// }
+		// table.Render() // Send output
 	}
 }
 func isDebug() bool {
-	return true
+	return false
 }

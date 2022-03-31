@@ -52,7 +52,14 @@ func TestParseBoardInputWithPlayedPieces(t *testing.T) {
 	assert.Equal(t, "P", string(result[7][3]))
 }
 
-// TODO:
-// 2 dim array Board
-// color switching
-//
+func TestBoardMove(t *testing.T) {
+	board := ParseBoardInput("8/8/8/8/3P4/8/8/8")
+
+	result := board.Move(moveOff('d','4','d','5'))
+
+	piece := result.get('d', 5)
+	expected := byte('P')
+	if piece != expected {
+		t.Errorf("got %b instead of %b", result, expected)
+	}
+}
