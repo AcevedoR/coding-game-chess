@@ -97,6 +97,7 @@ func GetBestMoveMinMax(board Board, isWhite bool, depth int) MinMaxScore {
 			if isCheckMate(board, move, isWhite) {
 				value = GetBestMoveMinMax(currentBoard, false, 0)
 				value.Move = move
+				break;
 			} else {
 				curMax := GetBestMoveMinMax(currentBoard, false, depth-1)
 				if curMax.Score > value.Score {
@@ -118,14 +119,18 @@ func GetBestMoveMinMax(board Board, isWhite bool, depth int) MinMaxScore {
 		for i := 0; i < len(moves); i++ {
 			move := moves[i]
 			currentBoard := board.Move(move)
+			if move.Format() == "e1e2" {
+				fmt.Printf("hello")
+			}
 			if isCheckMate(board, move, isWhite) {
 				value = GetBestMoveMinMax(currentBoard, false, 0)
 				value.Move = move
+				break;
 			} else {
 				curMin := GetBestMoveMinMax(currentBoard, true, depth-1)
 				if curMin.Score < value.Score {
-					if isDebug() && depth == 3 {
-						fmt.Printf("new max, old: %d, new: %d \n", value.Score, curMin.Score)
+					if isDebug() && depth == 2 {
+						fmt.Printf("\t\tnew min, old: %d, new: %d \n\t\t", value.Score, curMin.Score)
 						fmt.Println(move.Format())
 						fmt.Println()
 					}
@@ -307,17 +312,13 @@ func getKingMoves(board Board, origin Position, isWhite bool, weight int) []Move
 	}
 	for i := 0; i < len(theoryMoves); i++ {
 		m := theoryMoves[i]
-		if !(m.x >= 0 && m.x <= 7 && m.y >= 0 && m.y <= 7) {
-			return moves
-		}
-		target := board.Grid[m.x][m.y]
-		if target == 0 {
-			moves = append(moves, moveOf(origin.x, origin.y, m.x, m.y))
-		} else if determineIfWhite(target) != isWhite {
-			moves = append(moves, moveWithTakeOf(origin.x, origin.y, m.x, m.y, weight, getWeight(target)))
-			return moves
-		} else {
-			return moves
+		if m.x >= 0 && m.x <= 7 && m.y >= 0 && m.y <= 7 {
+			target := board.Grid[m.x][m.y]
+			if target == 0 {
+				moves = append(moves, moveOf(origin.x, origin.y, m.x, m.y))
+			} else if determineIfWhite(target) != isWhite {
+				moves = append(moves, moveWithTakeOf(origin.x, origin.y, m.x, m.y, weight, getWeight(target)))
+			}
 		}
 	}
 	return moves
