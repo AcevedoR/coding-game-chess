@@ -11,17 +11,6 @@ var isWhite = true
 var moves = []string{"a2a3", "a2a4", "b2b3", "b2b4", "c2c3", "c2c4", "d1c3", "d1e3", "d2d3", "d2d4", "e1d3", "e1f3", "e2e3", "e2e4", "f2f3", "f2f4", "g2g3", "g2g4", "h2h3", "h2h4"}
 var moveHistory = make([]Move, 0)
 
-// in = "brknnqrb/pppppppp/8/8/8/8/PPPPPPPP/BRKNNQRB w BGbg - 0 1"
-
-func TestNominalCase(t *testing.T) {
-	// given
-
-	// when
-	Play(boardInput, isWhite, moves, &moveHistory)
-
-	// then
-	assert.Len(t, moveHistory, 1)
-}
 func TestParseMoves(t *testing.T) {
 	// when
 	result := ParseMoves(moves)
@@ -63,3 +52,4 @@ func TestBoardMove(t *testing.T) {
 		t.Errorf("got %b instead of %b", result, expected)
 	}
 }
+
