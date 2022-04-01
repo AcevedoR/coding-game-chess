@@ -95,20 +95,19 @@ func GetBestMoveMinMax(board Board, isWhite bool, depth int) MinMaxScore {
 			move := moves[i]
 			currentBoard := board.Move(move)
 			if isCheckMate(board, move, isWhite) {
-				r := GetBestMoveMinMax(currentBoard, false, 0)
-				r.Move = move
-				return r
-			}
-			curMax := GetBestMoveMinMax(currentBoard, false, depth-1)
-			if curMax.Score > value.Score {
-				if isDebug() && depth == 3 {
-					fmt.Printf("new max, old: %d, new: %d \n", value.Score, curMax.Score)
-					fmt.Println(value.Move.Format())
-					fmt.Println(move.Format())
-					fmt.Println()
-				}
-				value = MinMaxScore{move, curMax.Score, append(curMax.History, curMax.Move)}
+				value = GetBestMoveMinMax(currentBoard, false, 0)
 				value.Move = move
+			} else {
+				curMax := GetBestMoveMinMax(currentBoard, false, depth-1)
+				if curMax.Score > value.Score {
+					if isDebug() && depth == 3 {
+						fmt.Printf("new max, old: %d, new: %d \n", value.Score, curMax.Score)
+						fmt.Println(move.Format())
+						fmt.Println()
+					}
+					value = MinMaxScore{move, curMax.Score, append(curMax.History, curMax.Move)}
+					value.Move = move
+				}
 			}
 		}
 		return value
@@ -120,20 +119,19 @@ func GetBestMoveMinMax(board Board, isWhite bool, depth int) MinMaxScore {
 			move := moves[i]
 			currentBoard := board.Move(move)
 			if isCheckMate(board, move, isWhite) {
-				r := GetBestMoveMinMax(currentBoard, false, 0)
-				r.Move = move
-				return r
-			}
-			curMin := GetBestMoveMinMax(currentBoard, true, depth-1)
-			if curMin.Score < value.Score {
-				if isDebug() && depth == 3 {
-					fmt.Printf("new max, old: %d, new: %d \n", value.Score, curMin.Score)
-					fmt.Println(value.Move.Format())
-					fmt.Println(move.Format())
-					fmt.Println()
-				}
-				value = MinMaxScore{move, curMin.Score, append(curMin.History, curMin.Move)}
+				value = GetBestMoveMinMax(currentBoard, false, 0)
 				value.Move = move
+			} else {
+				curMin := GetBestMoveMinMax(currentBoard, true, depth-1)
+				if curMin.Score < value.Score {
+					if isDebug() && depth == 3 {
+						fmt.Printf("new max, old: %d, new: %d \n", value.Score, curMin.Score)
+						fmt.Println(move.Format())
+						fmt.Println()
+					}
+					value = MinMaxScore{move, curMin.Score, append(curMin.History, curMin.Move)}
+					value.Move = move
+				}
 			}
 		}
 		return value
@@ -520,7 +518,6 @@ func (m Move) Format() string {
 func printBoard(b [8][8]byte) {
 	if isDebug() {
 		data := [][]string{}
-		println("FSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS")
 
 		for y := 7; y >= 0; y-- {
 			var line []string

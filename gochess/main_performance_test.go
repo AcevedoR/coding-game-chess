@@ -20,7 +20,7 @@ func TestTimeout1(t *testing.T) {
 	end := time.Now()
 
 	result := end.Sub(start).Milliseconds() 
-	expected := 16
+	expected := 20
 	if result >= int64(expected) {
 		t.Errorf("code took %d, but it should have been below %d", result, expected)
 	}
