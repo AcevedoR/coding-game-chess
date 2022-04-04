@@ -119,9 +119,6 @@ func GetBestMoveMinMax(board Board, isWhite bool, depth int) MinMaxScore {
 		for i := 0; i < len(moves); i++ {
 			move := moves[i]
 			currentBoard := board.Move(move)
-			if move.Format() == "e1e2" {
-				fmt.Printf("hello")
-			}
 			if isCheckMate(board, move, isWhite) {
 				value = GetBestMoveMinMax(currentBoard, false, 0)
 				value.Move = move
