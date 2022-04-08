@@ -68,19 +68,29 @@ func TestPawnMoveB(t *testing.T) {
 }
 
 func TestPawnEdges(t *testing.T) {
-	board := ParseBoardInput("P6P/8/8/8/8/8/8/p6p")
+	board := ParseBoardInput("8/p6p/8/8/8/8/P6P/8")
 
 	result := GetAllAggressiveMoves(board, true)
 
-	assertEmpty(t, result)
+	assertContainsOnly(
+		t,
+		result,
+		moveOff('a', '2', 'a', '3'),
+		moveOff('h', '2', 'h', '3'),
+	)
 }
 
 func TestPawnEdgesB(t *testing.T) {
-	board := ParseBoardInput("P6P/8/8/8/8/8/8/p6p")
+	board := ParseBoardInput("8/p6p/8/8/8/8/P6P/8")
 
 	result := GetAllAggressiveMoves(board, false)
 
-	assertEmpty(t, result)
+	assertContainsOnly(
+		t,
+		result,
+		moveOff('a', '7', 'a', '6'),
+		moveOff('h', '7', 'h', '6'),
+	)
 }
 
 func TestPawnShouldNotTakeFriendly(t *testing.T) {
@@ -196,6 +206,20 @@ func TestQueenTakeClose(t *testing.T) {
 		moveOff('d', '5', 'd', '6'),
 	)
 }
+func TestPawnPromotion(t *testing.T){
+	board := ParseBoardInput("8/7P/8/8/8/8/p7/8")
+
+	result := GetAllAggressiveMoves(board, true)
+
+	expected := moveOff('h', '7', 'h', '8')
+	expected.PromotionPiece = 'q'
+	assertContains(
+		t,
+		result,
+		expected,
+	)
+}
+
 func xTestKingMove(t *testing.T) {
 	// given
 	board := ParseBoardInput("8/8/8/8/3K4/8/8/8")
@@ -241,7 +265,7 @@ func assertContains(t *testing.T, slice []Move, expectedSlice ...Move){
 	for _, expected := range expectedSlice {
 		found := false
 		for _, move := range slice {
-			if move.Begin == expected.Begin && move.End == expected.End {
+			if move.Begin == expected.Begin && move.End == expected.End && move.PromotionPiece == expected.PromotionPiece{
 				found = true
 			}
 		}

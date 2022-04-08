@@ -7,10 +7,9 @@ import (
 func TestPawn(t *testing.T) {
 	// given
 	board := "8/8/8/q1r5/3P4/P7/8/8"
-	var moves = []string{"a2a3", "a2a4", "b2b3", "b2b4", "c2c3", "c2c4", "d1c3", "d1e3", "d2d3", "d2d4", "e1d3", "e1f3", "e2e3", "e2e4", "f2f3", "f2f4", "g2g3", "g2g4", "h2h3", "h2h4"}
 
 	// when
-	move := GetBestPlay(moves, board, true)
+	move := GetBestPlay(board, true)
 
 	// then
 	result := move.Format()
@@ -18,13 +17,36 @@ func TestPawn(t *testing.T) {
 	assertEquals(t, result, expected)
 }
 
+func TestPawnPromotionInTheFuture(t *testing.T){
+	board := "8/7P/8/8/8/8/8/8"
+
+	result := GetBestPlay(board, true)
+
+	expected := moveOff('h', '7', 'h', '8')
+	expected.PromotionPiece = 'q'
+	if result.Format() != expected.Format() {
+		t.Errorf("expected: %s, but got %s", expected.Format(), result.Format())
+	}
+}
+
+func TestBlackPawnPromotionInTheFuture(t *testing.T){
+	board := "8/8/8/8/8/8/p7/8"
+
+	result := GetBestPlay(board, false)
+
+	expected := moveOff('a', '2', 'a', '1')
+	expected.PromotionPiece = 'q'
+	if result.Format() != expected.Format() {
+		t.Errorf("expected: %s, but got %s", expected.Format(), result.Format())
+	}
+}
+
 func xTestCheckMate(t *testing.T) {
 	// given
 	board := "nqbrkbnr/pppppppp/8/k7/1P6/8/PPPP4/NQBRK3"
-	var moves = []string{"a2a3", "a2a4", "b2b3", "b2b4", "c2c3", "c2c4", "d1c3", "d1e3", "d2d3", "d2d4", "e1d3", "e1f3", "e2e3", "e2e4", "f2f3", "f2f4", "g2g3", "g2g4", "h2h3", "h2h4"}
 
 	// when
-	result := GetBestPlay(moves, board, true)
+	result := GetBestPlay(board, true)
 
 	// then
 	expected := "b4a5"
@@ -34,7 +56,7 @@ func xTestCheckMate(t *testing.T) {
 func TestAllyCheckMate(t *testing.T) {
 	board := "k7/2q5/5b2/4B3/3K4/8/8/8"
 
-	result := GetBestPlay(moves, board, true)
+	result := GetBestPlay(board, true)
 
 	assertEquals(t, result.Format(), "e5f6")
 }

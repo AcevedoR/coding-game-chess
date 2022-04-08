@@ -46,12 +46,12 @@ func main() {
 }
 
 func Play(boardInput string, isWhite bool, moves []string, moveHistory *[]Move) {
-	move := GetBestPlay(moves, boardInput, isWhite)
+	move := GetBestPlay(boardInput, isWhite)
 	fmt.Println(move.Format()) // Write action to stdout
 	//*moveHistory = append(*moveHistory, move)
 }
 
-func GetBestPlay(moves []string, boardInput string, isWhite bool) Move {
+func GetBestPlay(boardInput string, isWhite bool) Move {
 	board := ParseBoardInput(boardInput)
 	// legalMoves := ParseMoves(moves)
 	// move := GetBestMove(board, isWhite, legalMoves)
@@ -75,6 +75,7 @@ func GetBestMove(board Board, isWhite bool, legalMoves []Move) Move {
 		}
 		return max
 	}
+	panic("No moves found")
 	if len(legalMoves) > 1 {
 		return legalMoves[rand.Intn(len(legalMoves)-1)]
 	} else {
@@ -97,10 +98,10 @@ func GetBestMoveMinMax(board Board, isWhite bool, depth int) MinMaxScore {
 			if isCheckMate(board, move, isWhite) {
 				value = GetBestMoveMinMax(currentBoard, false, 0)
 				value.Move = move
-				break;
+				break
 			} else {
 				curMax := GetBestMoveMinMax(currentBoard, false, depth-1)
-				if curMax.Score > value.Score {
+				if curMax.Score >= value.Score {
 					if isDebug() && depth == 3 {
 						fmt.Printf("new max, old: %d, new: %d \n", value.Score, curMax.Score)
 						fmt.Println(move.Format())
@@ -122,10 +123,10 @@ func GetBestMoveMinMax(board Board, isWhite bool, depth int) MinMaxScore {
 			if isCheckMate(board, move, isWhite) {
 				value = GetBestMoveMinMax(currentBoard, false, 0)
 				value.Move = move
-				break;
+				break
 			} else {
 				curMin := GetBestMoveMinMax(currentBoard, true, depth-1)
-				if curMin.Score < value.Score {
+				if curMin.Score <= value.Score {
 					if isDebug() && depth == 2 {
 						fmt.Printf("\t\tnew min, old: %d, new: %d \n\t\t", value.Score, curMin.Score)
 						fmt.Println(move.Format())
@@ -252,17 +253,24 @@ func getDiagonalMoves(board Board, origin Position, isWhite bool, horizontalDire
 }
 func getPawnMoves(grid [8][8]byte, isWhite bool, vmod int, origin Position, weight int) []Move {
 	moves := make([]Move, 0, 48)
-	if origin.y+vmod < 1 || origin.y+vmod > 6 {
-		return moves
+	var promotion byte = 0
+	if isWhite && origin.y == 6 || (!isWhite && origin.y == 1) {
+		promotion = 'q'
 	}
 	if grid[origin.x][origin.y+vmod] == 0 {
-		moves = append(moves, moveOf(origin.x, origin.y, origin.x, origin.y+vmod))
+		move := moveOf(origin.x, origin.y, origin.x, origin.y+vmod)
+		move.PromotionPiece = promotion
+		moves = append(moves, move)
 	}
 	if origin.x < 7 && grid[origin.x+1][origin.y+vmod] != 0 && determineIfWhite(grid[origin.x+1][origin.y+vmod]) != isWhite {
-		moves = append(moves, moveWithTakeOf(origin.x, origin.y, origin.x+1, origin.y+vmod, weight, getWeight(grid[origin.x+1][origin.y+vmod])))
+		move := moveWithTakeOf(origin.x, origin.y, origin.x+1, origin.y+vmod, weight, getWeight(grid[origin.x+1][origin.y+vmod]))
+		move.PromotionPiece = promotion
+		moves = append(moves, move)
 	}
 	if origin.x > 0 && grid[origin.x-1][origin.y+vmod] != 0 && determineIfWhite(grid[origin.x-1][origin.y+vmod]) != isWhite {
-		moves = append(moves, moveWithTakeOf(origin.x, origin.y, origin.x-1, origin.y+vmod, weight, getWeight(grid[origin.x-1][origin.y+vmod])))
+		move := moveWithTakeOf(origin.x, origin.y, origin.x-1, origin.y+vmod, weight, getWeight(grid[origin.x-1][origin.y+vmod]))
+		move.PromotionPiece = promotion
+		moves = append(moves, move)
 	}
 	return moves
 }
@@ -441,6 +449,10 @@ func (b Board) GetPieces() (whitePieces []Piece, blackPieces []Piece) {
 }
 func (b Board) Move(move Move) Board {
 	piece := b.Grid[move.Begin.x][move.Begin.y]
+
+	if move.PromotionPiece != 0 {
+		piece = move.PromotionPiece
+	}
 	b.Grid[move.Begin.x][move.Begin.y] = 0
 	b.Grid[move.End.x][move.End.y] = piece
 	return b
@@ -465,9 +477,10 @@ func (p Position) Format() string {
 }
 
 type Move struct {
-	Begin Position
-	End   Position
-	Value int
+	Begin          Position
+	End            Position
+	Value          int
+	PromotionPiece byte
 }
 
 func (b Board) GetPositionalScore() int {
@@ -511,6 +524,9 @@ func moveWithTakeOf(ox int, oy int, tx int, ty int, oWeight int, tWeight int) Mo
 	return Move{Begin: Position{x: ox, y: oy}, End: Position{x: tx, y: ty}, Value: tWeight - oWeight}
 }
 func (m Move) Format() string {
+	if m.PromotionPiece != 0 {
+		return m.Begin.Format() + m.End.Format() + string(m.PromotionPiece)
+	}
 	return m.Begin.Format() + m.End.Format()
 }
 func printBoard(b [8][8]byte) {
