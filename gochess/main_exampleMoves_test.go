@@ -43,12 +43,31 @@ func TestIllegalMoves(t *testing.T) {
 			inputBoard: "3br1bB/r1knpp1p/1ppp4/5Pn1/8/P2P2N1/p1P1P2q/1K1BR2N",
 			notExpectedMove: "a3a4",
 		},
-		// "Illegal move 9": {
-		// 	// TODO set the queen as new piece in minmax
-		// 	inputBoard: "1kbbnrqn/1ppppppp/8/8/1r6/3P2P1/PpP1PPNP/RK1B1RQN",
-		// 	notExpectedMove: "b1b2",
-		// 	isBlack: true,
-		// },
+		"Illegal move 9": {
+		 	inputBoard: "1kbbnrqn/1ppppppp/8/8/1r6/3P2P1/PpP1PPNP/RK1B1RQN",
+		 	notExpectedMove: "b1b2",
+		 	isBlack: true,
+		 },
+	 	"Illegal move 10": {
+		 	inputBoard: "1Q6/3kp3/p7/2pB1pP1/8/1P2P3/Pn1P1P2/BRNKRN2",
+		 	notExpectedMove: "g5g6",
+		 },
+		 "Illegal move 10 bis": {
+		 	inputBoard: "8/3k1r2/8/3B4/8/8/1n6/1R1K4",
+		 	notExpectedMove: "d5f7",
+		 },
+		 "Illegal move 11": {
+		 	inputBoard: "rbknrnb1/pPpppp2/5qp1/7p/2P2P2/6PP/1P1PP3/RBKNRNBQ",
+		 	notExpectedMove: "f6b2",
+		 }, 
+		//  "Illegal move 12": {
+		//  	inputBoard: "b2n1rr1/pp1pbpkp/2p1pqp1/8/7P/5PP1/PPPnP3/BBNNRKR1",
+		//  	notExpectedMove: "c2c3",
+		//  }, 
+		//  "Queen under attack should move": {
+		//  	inputBoard: "b2n1rr1/pp1pbpkp/2pnpqp1/8/4Q2P/6P1/PPPPPPR1/BBNNRK2",
+		//  	notExpectedMove: "g2g1",
+		//  },
 	}
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {

@@ -61,6 +61,17 @@ func TestAllyCheckMate(t *testing.T) {
 	assertEquals(t, result.Format(), "e5f6")
 }
 
+func TestMinMax(t *testing.T) {
+	board := ParseBoardInput("8/8/8/2r5/2n1b3/3B4/8/8")
+	
+	result := GetBestMoveMinMax(board, true, 3)
+	
+	expectedScore := -50
+	if result.Score != expectedScore {
+		t.Errorf("got %d instead of %d", result, expectedScore)
+	}
+}
+
 func assertEquals(t *testing.T, result string, expected string) {
 	if result != expected {
 		t.Errorf("got %s instead of %s", result, expected)

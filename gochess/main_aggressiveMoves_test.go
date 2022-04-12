@@ -185,6 +185,23 @@ func TestBishopTakeClose(t *testing.T) {
 		moveOff('d', '5', 'e', '6'),
 	)
 }
+func TestKnightMove(t *testing.T) {
+	// given
+	board := ParseBoardInput("8/8/8/8/8/8/1n6/8")
+
+	// when
+	result := GetAllAggressiveMoves(board, false)
+
+	// then
+	assertContains(
+		t,
+		result,
+		moveOff('b', '2', 'a', '4'),
+		moveOff('b', '2', 'c', '4'),
+		moveOff('b', '2', 'd', '3'),
+		moveOff('b', '2', 'd', '1'),
+	)
+}
 func TestQueenTakeClose(t *testing.T) {
 	// given
 	board := ParseBoardInput("8/8/2PPP3/2PqP3/2PPP3/8/8/8")

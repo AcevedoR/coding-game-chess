@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"math/rand"
 	"os"
 )
 
@@ -63,26 +62,6 @@ func GetBestPlay(boardInput string, isWhite bool) Move {
 	return move.Move
 }
 
-func GetBestMove(board Board, isWhite bool, legalMoves []Move) Move {
-	aggressiveMoves := GetAllAggressiveMoves(board, isWhite)
-
-	if len(aggressiveMoves) > 0 {
-		max := aggressiveMoves[0]
-		for _, move := range aggressiveMoves {
-			if move.Value > max.Value {
-				max = move
-			}
-		}
-		return max
-	}
-	panic("No moves found")
-	if len(legalMoves) > 1 {
-		return legalMoves[rand.Intn(len(legalMoves)-1)]
-	} else {
-		return legalMoves[0]
-	}
-}
-
 func GetBestMoveMinMax(board Board, isWhite bool, depth int) MinMaxScore {
 	if depth == 0 {
 		return MinMaxScore{Move{}, board.GetPositionalScore(), []Move{}}
@@ -96,11 +75,12 @@ func GetBestMoveMinMax(board Board, isWhite bool, depth int) MinMaxScore {
 			move := moves[i]
 			currentBoard := board.Move(move)
 			if isCheckMate(board, move, isWhite) {
-				value = GetBestMoveMinMax(currentBoard, false, 0)
-				value.Move = move
+				value = MinMaxScore{move, 222222, []Move{}}
+				printWithDepth(move, value, depth, isWhite)
 				break
 			} else {
 				curMax := GetBestMoveMinMax(currentBoard, false, depth-1)
+				printWithDepth(move, curMax, depth, isWhite)
 				if curMax.Score >= value.Score {
 					if isDebug() && depth == 3 {
 						fmt.Printf("new max, old: %d, new: %d \n", value.Score, curMax.Score)
@@ -108,7 +88,6 @@ func GetBestMoveMinMax(board Board, isWhite bool, depth int) MinMaxScore {
 						fmt.Println()
 					}
 					value = MinMaxScore{move, curMax.Score, append(curMax.History, curMax.Move)}
-					value.Move = move
 				}
 			}
 		}
@@ -121,11 +100,12 @@ func GetBestMoveMinMax(board Board, isWhite bool, depth int) MinMaxScore {
 			move := moves[i]
 			currentBoard := board.Move(move)
 			if isCheckMate(board, move, isWhite) {
-				value = GetBestMoveMinMax(currentBoard, false, 0)
-				value.Move = move
+				value = MinMaxScore{move, -222222, []Move{}}
+				printWithDepth(move, value, depth, isWhite)
 				break
 			} else {
 				curMin := GetBestMoveMinMax(currentBoard, true, depth-1)
+				printWithDepth(move, curMin, depth, isWhite)
 				if curMin.Score <= value.Score {
 					if isDebug() && depth == 2 {
 						fmt.Printf("\t\tnew min, old: %d, new: %d \n\t\t", value.Score, curMin.Score)
@@ -138,6 +118,18 @@ func GetBestMoveMinMax(board Board, isWhite bool, depth int) MinMaxScore {
 			}
 		}
 		return value
+	}
+}
+func printWithDepth(move Move, score MinMaxScore, depth int, isWhite bool){
+	if isDebug(){
+		s := ""
+		if depth ==2 {
+			s = "\t"
+		}
+		if depth == 1 {
+			s="\t\t"
+		}
+		fmt.Println(s , move.Format(), " ", isWhite, " ", score.Score)
 	}
 }
 func isCheckMate(b Board, m Move, isWhite bool) bool {
@@ -195,7 +187,6 @@ func GetAllAggressiveMoves(board Board, isWhite bool) []Move {
 	return moves
 }
 func getAvailableMoves(board Board, origin Position, isWhite bool, horizontalDirection int, verticalDirection int, weight int) []Move {
-	var auditBoard [8][8]byte
 	moves := make([]Move, 0, 48)
 	horizontalSign := horizontalDirection
 	verticalSign := verticalDirection
@@ -208,28 +199,21 @@ func getAvailableMoves(board Board, origin Position, isWhite bool, horizontalDir
 
 	for x := origin.x + horizontalDirection; x >= 0 && x <= 7; x += horizontalSign {
 		for y := origin.y + verticalDirection; y >= 0 && y <= 7; y += verticalSign {
-			auditBoard[x][y] = '-'
 
 			if x == origin.x && y == origin.y {
-				printBoard(auditBoard)
 				return moves
 			}
 			target := board.Grid[x][y]
 			if target == 0 {
-				auditBoard[x][y] = 'x'
 				moves = append(moves, moveOf(origin.x, origin.y, x, y))
 			} else if determineIfWhite(target) != isWhite {
-				auditBoard[x][y] = 'o'
 				moves = append(moves, moveWithTakeOf(origin.x, origin.y, x, y, weight, getWeight(target)))
-				printBoard(auditBoard)
 				return moves
 			} else {
 				return moves
 			}
 		}
 	}
-	printBoard(auditBoard)
-
 	return moves
 }
 func getDiagonalMoves(board Board, origin Position, isWhite bool, horizontalDirection int, verticalDirection int, weight int) []Move {
@@ -289,16 +273,17 @@ func getKnightMoves(board Board, origin Position, isWhite bool, weight int) []Mo
 	for i := 0; i < len(theoryMoves); i++ {
 		m := theoryMoves[i]
 		if !(m.x >= 0 && m.x <= 7 && m.y >= 0 && m.y <= 7) {
-			return moves
-		}
-		target := board.Grid[m.x][m.y]
-		if target == 0 {
-			moves = append(moves, moveOf(origin.x, origin.y, m.x, m.y))
-		} else if determineIfWhite(target) != isWhite {
-			moves = append(moves, moveWithTakeOf(origin.x, origin.y, m.x, m.y, weight, getWeight(target)))
-			return moves
+			
 		} else {
-			return moves
+			target := board.Grid[m.x][m.y]
+			if target == 0 {
+				moves = append(moves, moveOf(origin.x, origin.y, m.x, m.y))
+			} else if determineIfWhite(target) != isWhite {
+				moves = append(moves, moveWithTakeOf(origin.x, origin.y, m.x, m.y, weight, getWeight(target)))
+				return moves
+			} else {
+				return moves
+			}
 		}
 	}
 	return moves
@@ -501,14 +486,15 @@ func getWeightOfPiece(p Piece) int {
 func getWeight(p byte) int {
 	if p == 'P' || p == 'p' {
 		return 10
-	} else if p == 'R' || p == 'r' {
-		return 30
-	} else if p == 'Q' || p == 'q' {
-		return 90
+	
 	} else if p == 'B' || p == 'b' {
 		return 30
 	} else if p == 'N' || p == 'n' {
 		return 30
+	} else if p == 'R' || p == 'r' {
+		return 50
+	} else if p == 'Q' || p == 'q' {
+		return 90
 	} else if p == 'K' || p == 'k' {
 		return 900
 	} else {
