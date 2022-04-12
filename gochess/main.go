@@ -19,6 +19,7 @@ func main() {
 	}
 
 	fmt.Println("fen moves")
+	firstRound := true
 
 	for {
 		fmt.Fprintln(os.Stderr, "starting turn")
@@ -40,21 +41,25 @@ func main() {
 		fmt.Fprintln(os.Stderr, "moves: ", availableMoves)
 
 		isWhite := color == "w"
-		Play(boardInput, isWhite, availableMoves, &moveHistory)
+		Play(boardInput, isWhite, availableMoves, &moveHistory, firstRound)
+		firstRound = false
 	}
 }
 
-func Play(boardInput string, isWhite bool, moves []string, moveHistory *[]Move) {
-	move := GetBestPlay(boardInput, isWhite)
+func Play(boardInput string, isWhite bool, moves []string, moveHistory *[]Move, firstRound bool) {
+
+	move := GetBestPlay(boardInput, isWhite, firstRound)
 	fmt.Println(move.Format()) // Write action to stdout
 	//*moveHistory = append(*moveHistory, move)
 }
 
-func GetBestPlay(boardInput string, isWhite bool) Move {
+func GetBestPlay(boardInput string, isWhite bool, firstRound bool) Move {
 	board := ParseBoardInput(boardInput)
-	// legalMoves := ParseMoves(moves)
-	// move := GetBestMove(board, isWhite, legalMoves)
-	move := GetBestMoveMinMax(board, isWhite, 3)
+	depth := 3
+	if firstRound {
+		depth = 4
+	}
+	move := GetBestMoveMinMax(board, isWhite, depth)
 	if isDebug() {
 		fmt.Println("moves plan:")
 		for i:= 0; i < len(move.History); i++ { 

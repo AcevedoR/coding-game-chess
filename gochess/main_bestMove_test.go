@@ -9,7 +9,7 @@ func TestPawn(t *testing.T) {
 	board := "8/8/8/q1r5/3P4/P7/8/8"
 
 	// when
-	move := GetBestPlay(board, true)
+	move := GetBestPlay(board, true, false)
 
 	// then
 	result := move.Format()
@@ -20,7 +20,7 @@ func TestPawn(t *testing.T) {
 func TestPawnPromotionInTheFuture(t *testing.T){
 	board := "8/7P/8/8/8/8/8/8"
 
-	result := GetBestPlay(board, true)
+	result := GetBestPlay(board, true, false)
 
 	expected := moveOff('h', '7', 'h', '8')
 	expected.PromotionPiece = 'q'
@@ -32,7 +32,7 @@ func TestPawnPromotionInTheFuture(t *testing.T){
 func TestBlackPawnPromotionInTheFuture(t *testing.T){
 	board := "8/8/8/8/8/8/p7/8"
 
-	result := GetBestPlay(board, false)
+	result := GetBestPlay(board, false, false)
 
 	expected := moveOff('a', '2', 'a', '1')
 	expected.PromotionPiece = 'q'
@@ -46,7 +46,7 @@ func xTestCheckMate(t *testing.T) {
 	board := "nqbrkbnr/pppppppp/8/k7/1P6/8/PPPP4/NQBRK3"
 
 	// when
-	result := GetBestPlay(board, true)
+	result := GetBestPlay(board, true, false)
 
 	// then
 	expected := "b4a5"
@@ -56,7 +56,7 @@ func xTestCheckMate(t *testing.T) {
 func TestAllyCheckMate(t *testing.T) {
 	board := "k7/2q5/5b2/4B3/3K4/8/8/8"
 
-	result := GetBestPlay(board, true)
+	result := GetBestPlay(board, true, false)
 
 	assertEquals(t, result.Format(), "e5f6")
 }

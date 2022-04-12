@@ -72,7 +72,7 @@ func TestIllegalMoves(t *testing.T) {
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
 			// when
-			result := GetBestPlay(test.inputBoard, !test.isBlack)
+			result := GetBestPlay(test.inputBoard, !test.isBlack, false)
 
 			// then
 			if result.Format() == test.notExpectedMove {
@@ -87,7 +87,7 @@ func TestIllegalMove4OppositeTakeKing(t *testing.T) {
 	board := "2b2n1q/5r2/2pr1p2/p1b2k1p/Pp2p1p1/1B4P1/1PP3PP/1RBKQ1RN"
 
 	// when
-	result := GetBestPlay(board, false)
+	result := GetBestPlay(board, false, false)
 
 	// then
 	expected := "d6d1"
