@@ -60,14 +60,14 @@ func TestIllegalMoves(t *testing.T) {
 		 	inputBoard: "rbknrnb1/pPpppp2/5qp1/7p/2P2P2/6PP/1P1PP3/RBKNRNBQ",
 		 	notExpectedMove: "f6b2",
 		 }, 
-		//  "Illegal move 12": {
-		//  	inputBoard: "b2n1rr1/pp1pbpkp/2p1pqp1/8/7P/5PP1/PPPnP3/BBNNRKR1",
-		//  	notExpectedMove: "c2c3",
-		//  }, 
-		//  "Queen under attack should move": {
-		//  	inputBoard: "b2n1rr1/pp1pbpkp/2pnpqp1/8/4Q2P/6P1/PPPPPPR1/BBNNRK2",
-		//  	notExpectedMove: "g2g1",
-		//  },
+		 "Illegal move 12": {
+		 	inputBoard: "b2n1rr1/pp1pbpkp/2p1pqp1/8/7P/5PP1/PPPnP3/BBNNRKR1",
+		 	notExpectedMove: "c2c3",
+		 }, 
+		 "Queen under attack should move": {
+		 	inputBoard: "b2n1rr1/pp1pbpkp/2pnpqp1/8/4Q2P/6P1/PPPPPPR1/BBNNRK2",
+		 	notExpectedMove: "g2g1",
+		 },
 	}
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {

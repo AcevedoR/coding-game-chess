@@ -57,7 +57,9 @@ func GetBestPlay(boardInput string, isWhite bool) Move {
 	move := GetBestMoveMinMax(board, isWhite, 3)
 	if isDebug() {
 		fmt.Println("moves plan:")
-		fmt.Println(move.History)
+		for i:= 0; i < len(move.History); i++ { 
+			fmt.Println(move.History[i].Format())
+		}
 	}
 	return move.Move
 }
@@ -280,9 +282,6 @@ func getKnightMoves(board Board, origin Position, isWhite bool, weight int) []Mo
 				moves = append(moves, moveOf(origin.x, origin.y, m.x, m.y))
 			} else if determineIfWhite(target) != isWhite {
 				moves = append(moves, moveWithTakeOf(origin.x, origin.y, m.x, m.y, weight, getWeight(target)))
-				return moves
-			} else {
-				return moves
 			}
 		}
 	}
