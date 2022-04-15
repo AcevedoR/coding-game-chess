@@ -56,10 +56,6 @@ func TestIllegalMoves(t *testing.T) {
 		 	inputBoard: "8/3k1r2/8/3B4/8/8/1n6/1R1K4",
 		 	notExpectedMove: "d5f7",
 		 },
-		 "Illegal move 11": {
-		 	inputBoard: "rbknrnb1/pPpppp2/5qp1/7p/2P2P2/6PP/1P1PP3/RBKNRNBQ",
-		 	notExpectedMove: "f6b2",
-		 }, 
 		 "Illegal move 12": {
 		 	inputBoard: "b2n1rr1/pp1pbpkp/2p1pqp1/8/7P/5PP1/PPPnP3/BBNNRKR1",
 		 	notExpectedMove: "c2c3",
@@ -68,11 +64,24 @@ func TestIllegalMoves(t *testing.T) {
 		 	inputBoard: "b2n1rr1/pp1pbpkp/2pnpqp1/8/4Q2P/6P1/PPPPPPR1/BBNNRK2",
 		 	notExpectedMove: "g2g1",
 		 },
+		//  "Should take easy pawn and prevent nearby checkmate": {
+		//  	inputBoard: "r2k2r1/p3p1P1/2pbq2p/1p1p4/3n2P1/2P5/PP1PPP2/R1BK1NRN",
+		//  	notExpectedMove: "g1g2",
+		//  },
+		//  "Queen should prevent incoming checkmate": {
+		//  	inputBoard: "rnknb1r1/ppppppbp/1q4p1/3N4/8/2N5/PPPPPPPP/R1K1BBRQ",
+		//  	notExpectedMove: "b6d4",
+		// 	 isBlack: true,
+		//  },
+		//  "Queen should prevent incoming checkmate 2": {
+		//  	inputBoard: "3r4/1pk2p2/p1n4p/8/8/2QP4/PPP1Pb2/RN1KBq2",
+		//  	notExpectedMove: "c3f6",
+		//  },
 	}
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
 			// when
-			result := GetBestPlay(test.inputBoard, !test.isBlack, false)
+			result := GetBestPlay(test.inputBoard, !test.isBlack, false, &[]Move{})
 
 			// then
 			if result.Format() == test.notExpectedMove {
@@ -87,7 +96,7 @@ func TestIllegalMove4OppositeTakeKing(t *testing.T) {
 	board := "2b2n1q/5r2/2pr1p2/p1b2k1p/Pp2p1p1/1B4P1/1PP3PP/1RBKQ1RN"
 
 	// when
-	result := GetBestPlay(board, false, false)
+	result := GetBestPlay(board, false, false, &[]Move{})
 
 	// then
 	expected := "d6d1"

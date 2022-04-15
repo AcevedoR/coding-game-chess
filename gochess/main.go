@@ -7,7 +7,7 @@ import (
 
 func main() {
 	fmt.Fprintln(os.Stderr, "starting game")
-	var moveHistory []Move
+	var moveHistory []Move = make([]Move, 0, 30)
 
 	var constantsCount int
 	fmt.Scan(&constantsCount)
@@ -48,53 +48,100 @@ func main() {
 
 func Play(boardInput string, isWhite bool, moves []string, moveHistory *[]Move, firstRound bool) {
 
-	move := GetBestPlay(boardInput, isWhite, firstRound)
+	move := GetBestPlay(boardInput, isWhite, firstRound, moveHistory)
 	fmt.Println(move.Format()) // Write action to stdout
-	//*moveHistory = append(*moveHistory, move)
 }
 
-func GetBestPlay(boardInput string, isWhite bool, firstRound bool) Move {
+func GetBestPlay(boardInput string, isWhite bool, firstRound bool, moveHistory *[]Move) Move {
 	board := ParseBoardInput(boardInput)
 	depth := 3
 	if firstRound {
 		depth = 4
 	}
-	move := GetBestMoveMinMax(board, isWhite, depth)
+	conf := MinMaxConstants{depth}
+	bestMove := GetBestMoveMinMax(board, isWhite, depth, conf)
+	
 	if isDebug() {
 		fmt.Println("moves plan:")
-		for i:= 0; i < len(move.History); i++ { 
-			fmt.Println(move.History[i].Format())
+		for i:= 0; i < len(bestMove.History); i++ { 
+			fmt.Println(bestMove.History[i].Format())
+		}
+		if bestMove.FinalResult != nil {
+			fmt.Println("\nbest moves:")
+			m := *bestMove.FinalResult.BestMoves
+			for i:= 0; i < len(m); i++ { 
+				fmt.Print(m[i].Move.Format())
+				fmt.Println("  ", m[i].Score)
+			}
+		}
+	}
+	move := bestMove.Move
+	// if bestMove.FinalResult != nil {
+	// 	move = GetBestMoveIfNotRepetition(MinMaxMove{bestMove.Move, bestMove.Score}, *bestMove.FinalResult.BestMoves, *moveHistory)
+	// }
+
+	diff := append(*moveHistory, move)
+	moveHistory = &diff
+	return move
+}
+func GetBestMoveIfNotRepetition(move MinMaxMove, bestMoves []MinMaxMove, history []Move) Move {
+	if len(bestMoves) == 1 {
+		return move.Move
+	}
+	repetition := 0
+	for i := 0; i < len(history); i++ {
+		if move.Move.Format() == history[i].Format(){
+			repetition++
+			if repetition > 1 {
+				return GetAlternativeBestMove(move, bestMoves, true)
+			}
 		}
 	}
 	return move.Move
 }
-
-func GetBestMoveMinMax(board Board, isWhite bool, depth int) MinMaxScore {
+func GetAlternativeBestMove(candidateMove MinMaxMove, bestMoves []MinMaxMove, forceChange bool) Move {
+	i := len(bestMoves) - 2
+	if !forceChange && Abs(candidateMove.Score) - Abs(bestMoves[i].Score) > 10 || i == 0 {
+		return candidateMove.Move
+	} else {
+		return bestMoves[i-1].Move
+	}
+}
+func Abs(x int) int {
+	if x < 0 {
+		return -x
+	}
+	return x
+}
+func GetBestMoveMinMax(board Board, isWhite bool, depth int, constants MinMaxConstants) (MinMaxScore) {
 	if depth == 0 {
-		return MinMaxScore{Move{}, board.GetPositionalScore(), []Move{}}
+		return MinMaxScore{Move{}, board.GetPositionalScore(), []Move{}, nil}
 	}
 	printBoard(board.Grid)
 	if isWhite {
 		//max
 		moves := GetAllAggressiveMoves(board, isWhite)
-		value := MinMaxScore{Move{}, -9999, []Move{}}
+		value := MinMaxScore{Move{}, -9999, []Move{}, nil}
 		for i := 0; i < len(moves); i++ {
 			move := moves[i]
 			currentBoard := board.Move(move)
 			if isCheckMate(board, move, isWhite) {
-				value = MinMaxScore{move, 222222, []Move{}}
+				value = MinMaxScore{move, 222222, []Move{}, nil}
 				printWithDepth(move, value, depth, isWhite)
 				break
 			} else {
-				curMax := GetBestMoveMinMax(currentBoard, false, depth-1)
+				curMax := GetBestMoveMinMax(currentBoard, false, depth-1, constants)
 				printWithDepth(move, curMax, depth, isWhite)
 				if curMax.Score >= value.Score {
-					if isDebug() && depth == 3 {
+					if isDebug() && depth == constants.maxDepth {
 						fmt.Printf("new max, old: %d, new: %d \n", value.Score, curMax.Score)
 						fmt.Println(move.Format())
 						fmt.Println()
 					}
-					value = MinMaxScore{move, curMax.Score, append(curMax.History, curMax.Move)}
+					value = MinMaxScore{move, curMax.Score, append(curMax.History, curMax.Move), value.FinalResult}
+					if depth == constants.maxDepth {
+						handleRootDepth(&value)
+					}
 				}
 			}
 		}
@@ -102,32 +149,34 @@ func GetBestMoveMinMax(board Board, isWhite bool, depth int) MinMaxScore {
 	} else {
 		//min
 		moves := GetAllAggressiveMoves(board, isWhite)
-		value := MinMaxScore{Move{}, 9999, []Move{}}
+		value := MinMaxScore{Move{}, 9999, []Move{}, nil}
 		for i := 0; i < len(moves); i++ {
 			move := moves[i]
 			currentBoard := board.Move(move)
 			if isCheckMate(board, move, isWhite) {
-				value = MinMaxScore{move, -222222, []Move{}}
+				value = MinMaxScore{move, -222222, []Move{}, nil}
 				printWithDepth(move, value, depth, isWhite)
 				break
 			} else {
-				curMin := GetBestMoveMinMax(currentBoard, true, depth-1)
+				curMin := GetBestMoveMinMax(currentBoard, true, depth-1, constants)
 				printWithDepth(move, curMin, depth, isWhite)
 				if curMin.Score <= value.Score {
-					if isDebug() && depth == 2 {
+					if isDebug() && constants.maxDepth - 1 == depth{
 						fmt.Printf("\t\tnew min, old: %d, new: %d \n\t\t", value.Score, curMin.Score)
 						fmt.Println(move.Format())
 						fmt.Println()
 					}
-					value = MinMaxScore{move, curMin.Score, append(curMin.History, curMin.Move)}
-					value.Move = move
+					value = MinMaxScore{move, curMin.Score, append(curMin.History, curMin.Move), value.FinalResult}
+					if depth == constants.maxDepth {	
+						handleRootDepth(&value)
+					}
 				}
 			}
 		}
 		return value
 	}
 }
-func printWithDepth(move Move, score MinMaxScore, depth int, isWhite bool){
+func printWithDepth(candidateMove Move, score MinMaxScore, depth int, isWhite bool){
 	if isDebug(){
 		s := ""
 		if depth ==2 {
@@ -136,7 +185,7 @@ func printWithDepth(move Move, score MinMaxScore, depth int, isWhite bool){
 		if depth == 1 {
 			s="\t\t"
 		}
-		fmt.Println(s , move.Format(), " ", isWhite, " ", score.Score)
+		fmt.Println(s , candidateMove.Format(), " ", isWhite, " ", score.Score)
 	}
 }
 func isCheckMate(b Board, m Move, isWhite bool) bool {
@@ -145,13 +194,31 @@ func isCheckMate(b Board, m Move, isWhite bool) bool {
 	}
 	return false
 }
-
+func handleRootDepth(value *MinMaxScore){
+		if value.FinalResult == nil {
+			a := make([]MinMaxMove, 0, 20)
+			value.FinalResult = &MinMaxFinalResult{BestMoves: &a}
+		}
+		na := append(*value.FinalResult.BestMoves, MinMaxMove{value.Move, value.Score})
+		value.FinalResult.BestMoves = &na
+	
+}
 type MinMaxScore struct {
 	Move    Move
 	Score   int
 	History []Move
+	FinalResult *MinMaxFinalResult
 }
-
+type MinMaxFinalResult struct {
+	BestMoves *[]MinMaxMove
+}
+type MinMaxMove struct {
+	Move Move
+	Score int 
+}
+type MinMaxConstants struct {	
+	maxDepth int
+}
 func GetAllAggressiveMoves(board Board, isWhite bool) []Move {
 	vmod := 1
 	whites, blacks := board.GetPieces()
